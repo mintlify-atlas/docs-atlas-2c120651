@@ -1,80 +1,523 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get playing OpenRCT2 in minutes
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+Before starting, ensure you have:
 
-### Step 1: Set up your local environment
+<Steps>
+  <Step title="OpenRCT2 Installed">
+    Follow the [installation guide](/installation) for your platform.
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+  <Step title="RCT2 Files Configured">
+    OpenRCT2 must be able to locate your RollerCoaster Tycoon 2 game files.
+  </Step>
+</Steps>
+
+## First Launch
+
+<Steps>
+  <Step title="Start OpenRCT2">
+    Launch OpenRCT2 from your applications menu, desktop shortcut, or by running the executable.
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    <CodeGroup>
+      ```bash Windows
+      # If installed
+      # Launch from Start Menu or Desktop
+      
+      # If portable
+      .\openrct2.exe
+      ```
+      
+      ```bash Linux
+      # Flatpak
+      flatpak run io.openrct2.OpenRCT2
+      
+      # Package manager install
+      openrct2
+      ```
+      
+      ```bash macOS
+      # Launch from Applications folder
+      open /Applications/OpenRCT2.app
+      ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Verify RCT2 Asset Path">
+    If this is your first launch, OpenRCT2 will attempt to locate your RCT2 files automatically.
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    - If successful, you'll see the title screen
+    - If unsuccessful, you'll be prompted to browse for the RCT2 directory
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    <Warning>
+      Point OpenRCT2 to the root RCT2 folder containing the `Data` directory with `g1.dat` inside.
+    </Warning>
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Welcome Screen">
+    You'll see the OpenRCT2 title screen with several options:
+    
+    - **New Game**: Start a new scenario
+    - **Continue Saved Game**: Load a previously saved park
+    - **Scenarios**: Browse and play different scenarios
+    - **Sandbox Mode**: Build without restrictions
+    - **Multiplayer**: Join or host multiplayer games
+  </Step>
+</Steps>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## Your First Park
 
-### Step 3: Go live
+Let's create your first park in OpenRCT2!
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+### Option 1: Start with a Scenario
 
-## Next steps
+<Steps>
+  <Step title="Select a Scenario">
+    From the title screen, click **New Game** or **Scenarios**.
+    
+    For beginners, try:
+    - **Forest Frontiers** (RCT1) - Easy, gentle introduction
+    - **Crazy Castle** (RCT2) - Medium difficulty
+    - Any scenario marked as "Beginner" difficulty
+  </Step>
 
-Now that you have your docs running, explore these key features:
+  <Step title="Review the Objective">
+    Each scenario has specific goals:
+    
+    - Achieve a certain park value
+    - Attract a number of guests
+    - Have rides with specific excitement ratings
+    - Complete within a time limit
+    
+    Read the objective carefully before starting!
+  </Step>
+
+  <Step title="Start Playing">
+    Click **Start Scenario** to begin. The game will load your park.
+  </Step>
+</Steps>
+
+### Option 2: Sandbox Mode
+
+<Steps>
+  <Step title="Launch Sandbox">
+    From the title screen, navigate to **Sandbox Mode**.
+  </Step>
+
+  <Step title="Choose Your Settings">
+    Configure your sandbox experience:
+    
+    - **Map Size**: Small to huge (recommend medium for first park)
+    - **Terrain**: Flat, hills, mountains, or custom
+    - **Money**: Unlimited or starting amount
+    - **Park Rating**: Enable/disable guest happiness requirements
+  </Step>
+
+  <Step title="Start Building">
+    Click **Start** to begin building your dream park!
+  </Step>
+</Steps>
+
+## Basic Controls
+
+### Navigation
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Camera Movement" icon="video">
+    - **Arrow Keys**: Pan camera
+    - **Mouse Wheel**: Zoom in/out
+    - **Right Click + Drag**: Pan camera
+    - **Page Up/Down**: Rotate view
+  </Card>
+  
+  <Card title="Game Speed" icon="gauge-high">
+    - **Pause**: Space bar or pause button
+    - **Speed Up**: `+` key
+    - **Slow Down**: `-` key
+    - **Normal Speed**: `1` key
+  </Card>
 </CardGroup>
 
+### Interface
+
+The toolbar at the top contains all main functions:
+
+- **Disk icon**: Save/Load games
+- **Wrench**: Build rides and attractions  
+- **Footpath**: Build paths
+- **Scenery**: Place scenery objects
+- **Terrain**: Landscaping tools
+- **Guest**: View guest information
+- **Staff**: Hire and manage staff
+- **Finance**: View park finances
+- **Map**: View park map
+
+## Essential First Steps
+
+Follow these steps to build a successful park:
+
+<Steps>
+  <Step title="Build Park Entrance">
+    If not already placed, position your park entrance:
+    
+    1. Click the **Park** button in toolbar
+    2. Select **Park Entrance**
+    3. Choose a location near the map edge
+    4. The entrance determines where guests spawn
+    
+    <Note>
+      In most scenarios, the entrance is pre-placed. You can see it on the map as a building with a path leading to it.
+    </Note>
+  </Step>
+
+  <Step title="Build Paths">
+    Guests need paths to navigate your park:
+    
+    1. Click the **Footpath** button (shoe icon)
+    2. Select a path type (concrete paths are fine for starters)
+    3. Click tiles to lay path from the entrance
+    4. Hold Shift while clicking to queue multiple tiles
+    
+    <Warning>
+      Guests cannot walk on grass! They need paths to reach attractions.
+    </Warning>
+  </Step>
+
+  <Step title="Place Your First Ride">
+    Time to add some attractions:
+    
+    1. Click the **Wrench** icon (Build Rides)
+    2. Browse the ride categories in tabs:
+       - **Transport Rides**: Gentle rides for all ages
+       - **Gentle Rides**: Merry-go-rounds, ferris wheels
+       - **Thrill Rides**: Intense attractions
+       - **Roller Coasters**: Custom-built coasters
+    3. Select a ride (try **Merry-Go-Round** for your first)
+    4. Click on the map to place it near your path
+    
+    <Note>
+      Pre-built rides (gentle rides, transport rides) are easiest to start with. Roller coasters require track construction.
+    </Note>
+  </Step>
+
+  <Step title="Connect Ride to Path">
+    Guests need path access to ride entrances:
+    
+    1. Look for the ride entrance (marked with an arrow)
+    2. Build paths connecting to the entrance
+    3. The entrance should highlight when properly connected
+  </Step>
+
+  <Step title="Open the Ride">
+    Before guests can ride:
+    
+    1. Click on the ride to open its window
+    2. Review the ride settings (usually defaults are fine)
+    3. Click the **Open** button (flag icon)
+    4. Set a price (or leave free to start)
+    
+    <Tip>
+      For your first rides, leaving them free or very cheap ($0.20-$0.50) helps attract guests and build park rating.
+    </Tip>
+  </Step>
+
+  <Step title="Add Essential Facilities">
+    Keep guests happy with amenities:
+    
+    1. Open the **Build Rides** menu
+    2. Go to the **Shops & Stalls** tab
+    3. Place essential facilities near your rides:
+       - **Information Kiosk**: Provides maps and umbrellas
+       - **Toilet**: Prevents unhappy guests
+       - **Food Stall**: Burgers, pizza, etc.
+       - **Drink Stall**: Soda, juice
+    4. Connect them to paths
+    5. Open each facility and stock them
+  </Step>
+
+  <Step title="Hire Staff">
+    Your park needs maintenance:
+    
+    1. Click the **Staff** button (person icon)
+    2. Hire staff members:
+       - **Handymen**: Clean litter, mow lawns, water gardens
+       - **Mechanics**: Repair and inspect rides
+       - **Security Guards**: Prevent vandalism
+       - **Entertainers**: Keep guests happy
+    3. Click on staff to set their patrol area
+    4. Right-click map tiles to define where they work
+    
+    <Tip>
+      Start with 2-3 handymen and 1 mechanic. Add more as your park grows.
+    </Tip>
+  </Step>
+
+  <Step title="Set Patrol Areas">
+    Assign staff to specific zones:
+    
+    1. Click on a staff member
+    2. Click the **Patrol** button
+    3. Click tiles to create their patrol zone
+    4. They'll only work in this area
+    
+    This prevents staff from wandering too far from their assigned section.
+  </Step>
+
+  <Step title="Monitor Your Park">
+    Keep an eye on important metrics:
+    
+    1. **Guest Count**: Bottom-right of screen
+    2. **Park Rating**: In the park window
+    3. **Finances**: Click the banknote icon
+    4. **Ride Status**: Click rides to check queue length, excitement rating
+    
+    <CardGroup cols={2}>
+      <Card title="Park Rating">
+        Affected by ride variety, cleanliness, scenery, and guest happiness. Keep above 700 for good results.
+      </Card>
+      <Card title="Guest Thoughts">
+        Click on guests to read their thoughts. This reveals what they want or problems in your park.
+      </Card>
+    </CardGroup>
+  </Step>
+</Steps>
+
+## Building Your First Roller Coaster
+
+Ready for more advanced construction?
+
+<Steps>
+  <Step title="Select a Coaster Type">
+    1. Open **Build Rides** menu
+    2. Click the **Roller Coasters** tab
+    3. Choose a coaster type:
+       - **Steel Roller Coaster**: Most versatile
+       - **Wooden Roller Coaster**: Classic style
+       - **Junior Roller Coaster**: Gentle for beginners
+    
+    For your first coaster, try the **Junior Roller Coaster** or browse **Track Designs** for pre-built layouts.
+  </Step>
+
+  <Step title="Option A: Use a Track Design">
+    The easiest way to build your first coaster:
+    
+    1. In the ride selection window, click **Track Designs**
+    2. Browse available designs
+    3. Select one that fits your park
+    4. Place it on your map
+    5. Connect entrance and exit to paths
+    6. Open the ride
+    
+    <Note>
+      Track designs are pre-built coasters tested for excitement, intensity, and nausea ratings. Perfect for beginners!
+    </Note>
+  </Step>
+
+  <Step title="Option B: Build Your Own">
+    For custom coaster construction:
+    
+    1. Select the coaster type and click **Place Ride Entrance**
+    2. Click on the map to place the entrance/exit building
+    3. Click **Construct New Design**
+    4. Click the green tile to start building track:
+       - Choose track pieces from the menu
+       - Chain lift for going uphill
+       - Curves and turns
+       - Drops and hills
+    5. Connect back to the station to complete the circuit
+    6. Click **Test** to simulate the ride
+    
+    <Warning>
+      Coasters need:
+      - A complete circuit back to the station
+      - Chain lift or powered launch to get over the first hill
+      - Reasonable excitement vs. intensity ratio
+      - Safe G-forces (game will warn you)
+    </Warning>
+  </Step>
+
+  <Step title="Test and Adjust">
+    Before opening:
+    
+    1. Click the ride window's **Test** button
+    2. Watch the test car complete the circuit
+    3. Review the ratings:
+       - **Excitement**: Higher is better (aim for 4.00+)
+       - **Intensity**: Moderate is best (under 10.00)
+       - **Nausea**: Lower is better (under 4.00)
+    4. If test fails, modify the track design
+    5. Test again until it passes
+  </Step>
+
+  <Step title="Enhance with Scenery">
+    Improve excitement ratings by adding scenery:
+    
+    1. Click the **Scenery** button
+    2. Place trees, shrubs, and decorations near the coaster
+    3. Add themed scenery matching your coaster style
+    4. Scenery within view of the track increases excitement
+    
+    <Tip>
+      Underground sections through tunnels add excitement! Use the terrain tools to lower ground around track sections.
+    </Tip>
+  </Step>
+</Steps>
+
+## Tips for Success
+
+<CardGroup cols={2}>
+  <Card title="Start Small" icon="seedling">
+    Begin with a few rides and facilities. Expand gradually as guest count and revenue increase. Don't overextend early!
+  </Card>
+  
+  <Card title="Balance Your Budget" icon="balance-scale">
+    Monitor income vs. expenses. Keep a cash reserve for emergencies. Take out loans if needed, but repay them to reduce interest.
+  </Card>
+  
+  <Card title="Guest Happiness" icon="face-smile">
+    Read guest thoughts by clicking on them. Address common complaints (need toilet, hungry, lost, want more rides of X type).
+  </Card>
+  
+  <Card title="Ride Variety" icon="dice">
+    Mix gentle rides, thrill rides, and coasters. Different guests prefer different attractions. Variety increases park rating.
+  </Card>
+  
+  <Card title="Keep It Clean" icon="broom">
+    Hire enough handymen and set patrol areas. Litter and vandalism decrease park rating. Place bins near popular rides.
+  </Card>
+  
+  <Card title="Research" icon="flask">
+    In the **Finances** window, allocate budget to **Research & Development**. This unlocks new rides and attractions over time.
+  </Card>
+  
+  <Card title="Marketing" icon="bullhorn">
+    Use the **Marketing** window to run advertising campaigns. Promote your park or specific rides to attract more guests.
+  </Card>
+  
+  <Card title="Save Often" icon="floppy-disk">
+    Save your park regularly! Use multiple save slots so you can revert if you make a mistake or want to try different approaches.
+  </Card>
+</CardGroup>
+
+## Keyboard Shortcuts
+
+Speed up your gameplay with shortcuts:
+
+<Tabs>
+  <Tab title="General">
+    | Shortcut | Action |
+    | --- | --- |
+    | `Space` | Pause/Unpause game |
+    | `+` / `-` | Adjust game speed |
+    | `1` / `2` / `3` / `4` | Set game speed |
+    | `Arrow Keys` | Pan camera |
+    | `Page Up` / `Page Down` | Rotate view |
+    | `Home` / `End` | Change zoom level |
+    | `F10` | Take screenshot |
+    | `Ctrl+S` | Quick save |
+  </Tab>
+  
+  <Tab title="Construction">
+    | Shortcut | Action |
+    | --- | --- |
+    | `Shift + Click` | Queue multiple items |
+    | `Z` | Toggle underground view |
+    | `Ctrl + Z` | Undo last action |
+    | `T` | Terrain tools |
+    | `P` | Path construction |
+    | `V` | Scenery placement |
+  </Tab>
+  
+  <Tab title="View">
+    | Shortcut | Action |
+    | --- | --- |
+    | `V` | Toggle scenery visibility |
+    | `F` | Toggle full screen |
+    | `M` | Open map window |
+    | `I` | Park information |
+    | `G` | Guest list |
+    | `S` | Staff list |
+  </Tab>
+</Tabs>
+
+## Common Mistakes to Avoid
+
+<AccordionGroup>
+  <Accordion title="Forgetting to open rides">
+    New rides default to closed status. Always click the ride and press the "Open" button (flag icon) so guests can use it!
+  </Accordion>
+  
+  <Accordion title="Not connecting paths properly">
+    Ride entrances must connect to paths. If guests can't reach a ride, they won't use it even if it's open.
+  </Accordion>
+  
+  <Accordion title="Building too many rides at once">
+    Each ride has running costs. Build gradually based on guest demand and revenue. Overbuilding leads to bankruptcy.
+  </Accordion>
+  
+  <Accordion title="Ignoring staff needs">
+    Hire mechanics to inspect rides regularly. Neglected rides break down more often, frustrating guests and hurting ratings.
+  </Accordion>
+  
+  <Accordion title="Extreme coaster designs">
+    Very intense coasters (intensity > 10) make guests sick. Aim for balanced excitement and intensity for broad appeal.
+  </Accordion>
+  
+  <Accordion title="No toilets">
+    Guests WILL need toilets. Place them throughout your park. Unhappy guests from full bladders hurt your park rating.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Explore Multiplayer" icon="users" href="/gameplay/multiplayer">
+    Join friends in cooperative park building or compete in challenges.
+  </Card>
+  
+  <Card title="Explore Features" icon="star" href="/gameplay/features">
+    Discover all the improvements and new features in OpenRCT2.
+  </Card>
+  
+  <Card title="Install Plugins" icon="plug" href="/scripting/introduction">
+    Extend OpenRCT2 with community plugins for new features and customization.
+  </Card>
+  
+  <Card title="Join the Community" icon="discord" href="https://discord.gg/fsEwSWs">
+    Connect with other players on Discord for tips, showcase parks, and get help.
+  </Card>
+</CardGroup>
+
+## Getting Help
+
+If you run into issues:
+
+<Steps>
+  <Step title="Check In-Game Help">
+    OpenRCT2 includes tooltips and help text. Hover over buttons and options to see descriptions.
+  </Step>
+  
+  <Step title="Read Guest Thoughts">
+    Guests tell you what's wrong! Click on guests to read their thoughts and address their needs.
+  </Step>
+  
+  <Step title="Visit the Wiki">
+    The [OpenRCT2 Wiki](https://github.com/OpenRCT2/OpenRCT2/wiki) has detailed guides and troubleshooting information.
+  </Step>
+  
+  <Step title="Ask the Community">
+    Join the [Discord server](https://discord.gg/fsEwSWs) to ask questions and get help from experienced players.
+  </Step>
+</Steps>
+
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Remember: Park building is a learning experience! Don't worry about perfection on your first park. Experiment, have fun, and learn from your guests' feedback.
 </Note>
+
+---
+
+**Happy building, and welcome to OpenRCT2!** 🎢

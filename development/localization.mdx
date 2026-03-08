@@ -1,0 +1,345 @@
+---
+title: Localization
+description: How to translate OpenRCT2 and contribute to localization efforts
+---
+
+OpenRCT2 supports multiple languages and welcomes translation contributions. Translation work is managed separately from the main codebase to streamline the workflow for translators.
+
+## Translation Repository
+
+All translation work happens in a dedicated repository:
+
+<Card title="OpenRCT2/Localisation" icon="github" href="https://github.com/OpenRCT2/Localisation">
+  Visit the localization repository to contribute translations
+</Card>
+
+<Note>
+Changes to the Localisation repository are automatically merged with the main OpenRCT2 repository every night.
+</Note>
+
+## Getting Started
+
+### Prerequisites
+
+- GitHub account
+- Basic understanding of Git (or willingness to learn)
+- Fluency in both English and your target language
+- Join the [#localisation Discord channel](https://discord.gg/sxnrvX9)
+
+### Translation Workflow
+
+1. **Find Your Language**: Check if your language already exists in `data/language/`
+2. **Fork the Repository**: Fork [OpenRCT2/Localisation](https://github.com/OpenRCT2/Localisation)
+3. **Edit Language File**: Translate strings in your language's `.txt` file
+4. **Submit Pull Request**: Submit your changes back to the repository
+5. **Wait for Review**: Team members will review and merge your translation
+
+## Language Files
+
+Language files are located in the `data/language/` directory:
+
+```
+data/language/
+├── en-GB.txt    # British English (base language)
+├── de-DE.txt    # German
+├── fr-FR.txt    # French
+├── es-ES.txt    # Spanish
+├── ja-JP.txt    # Japanese
+└── ...          # Other languages
+```
+
+### File Format
+
+Language files use a simple text format:
+
+```text
+# Comments start with hash
+STR_0001    :{STRINGID} {COMMA16}
+STR_0002    :Spiral Roller Coaster
+STR_0003    :Stand-up Roller Coaster
+```
+
+<ParamField path="String ID" type="STR_XXXX">
+  The string identifier (e.g., `STR_0002`). This must match the base English file.
+</ParamField>
+
+<ParamField path="Separator" type=":">
+  Colon separator between ID and text
+</ParamField>
+
+<ParamField path="Translation" type="string">
+  The translated text. Everything after the colon until the newline.
+</ParamField>
+
+### Format Codes
+
+OpenRCT2 uses format codes for dynamic content:
+
+<CodeGroup>
+```text Numbers
+{COMMA16}        - 16-bit number with thousands separator
+{COMMA32}        - 32-bit number with thousands separator
+{INT32}          - Integer without separator
+{VELOCITY}       - Speed value (km/h or mph)
+{CURRENCY}       - Money value
+{CURRENCY2DP}    - Money with 2 decimal places
+```
+
+```text Strings
+{STRINGID}       - Reference another string
+{STRING}         - Dynamic string insertion
+{RAW_STRING_ID}  - Raw string ID reference
+```
+
+```text Formatting
+{NEWLINE}        - Line break
+{MOVE_X}         - Move cursor horizontally
+{YELLOW}         - Change text color to yellow
+{WHITE}          - Change text color to white
+{BLACK}          - Change text color to black
+```
+
+```text Dates & Time
+{DATE_MONTH_YEAR} - Date format (month and year)
+{DATE_DAY}       - Day of month
+{MONTH}          - Month name
+{DURATION}       - Time duration
+```
+</CodeGroup>
+
+<Warning>
+Format codes must be preserved in translations. Removing or reordering them incorrectly can cause crashes or display issues.
+</Warning>
+
+## Translation Guidelines
+
+### Do's
+
+- **Preserve format codes**: Keep all `{FORMAT_CODE}` placeholders in your translation
+- **Match context**: Ensure translations fit the context (UI space constraints, tone)
+- **Use native terms**: Use terms native speakers would naturally use
+- **Check existing translations**: Look at how similar terms are translated elsewhere in the file
+- **Ask questions**: If unsure, ask in the Discord #localisation channel
+
+### Don'ts
+
+- **Don't translate en-GB.txt in main repository**: Only translate in the Localisation repository
+- **Don't remove format codes**: This will cause errors
+- **Don't add extra format codes**: Only use codes present in the English string
+- **Don't translate proper nouns**: Ride type names, staff types, etc. may have established translations
+- **Don't guess**: If you're unsure about a translation, ask for clarification
+
+## For Developers: Adding New Strings
+
+If you're a developer adding new features that require new strings:
+
+### Step 1: Add to en-GB.txt
+
+Add your new string to `./data/language/en-GB.txt`:
+
+```text
+STR_YOUR_NEW_STRING    :Your English text here
+```
+
+<Warning>
+Only edit `en-GB.txt` in the main OpenRCT2 repository. Never edit other language files directly in the main repo.
+</Warning>
+
+### Step 2: Add String Constant
+
+Add a constant to `./src/localisation/StringIds.h`:
+
+```cpp
+constexpr StringId STR_YOUR_NEW_STRING = 1234;
+```
+
+### Step 3: Use in Code
+
+Reference the string in your code:
+
+```cpp
+DrawStringLeft(dpi, STR_YOUR_NEW_STRING, nullptr, x, y);
+```
+
+### Step 4: Create Localisation Issue
+
+After your PR is merged:
+
+1. Create an issue in [OpenRCT2/Localisation](https://github.com/OpenRCT2/Localisation/issues)
+2. List the new strings added
+3. Provide context about where/how they're used
+4. Tag it with the "new strings" label
+
+<Info>
+This notifies translators that new strings need translation. It's especially important for string changes, which are easily overlooked.
+</Info>
+
+## Language-Specific Considerations
+
+### Character Encoding
+
+All language files use UTF-8 encoding. Ensure your text editor saves files as UTF-8.
+
+### Text Direction
+
+OpenRCT2 currently supports left-to-right (LTR) languages. Right-to-left (RTL) language support is a work in progress.
+
+### String Length
+
+Some UI elements have limited space. If your translation is significantly longer than English:
+
+- Use common abbreviations if appropriate
+- Consult with the team about UI adjustments
+- Test in-game to ensure text fits
+
+### Plural Forms
+
+English uses simple singular/plural rules. Your language may require different handling:
+
+```text
+# English (simple)
+STR_GUESTS    :{COMMA16} guest(s)
+
+# Some languages may need multiple forms
+# Consult with team about complex plural rules
+```
+
+## Testing Your Translation
+
+### In-Game Testing
+
+1. Build OpenRCT2 from source (see [Building the Game](/building))
+2. Copy your language file to the build's `data/language/` directory
+3. Launch OpenRCT2
+4. Go to Options → Language and select your language
+5. Navigate through the game checking translations
+
+### What to Check
+
+<AccordionGroup>
+  <Accordion title="UI Fit">
+    Ensure translated text fits in buttons, labels, and windows without being cut off or causing layout issues.
+  </Accordion>
+  
+  <Accordion title="Format Codes">
+    Verify that format codes like `{CURRENCY}` and `{COMMA16}` display correctly with proper values.
+  </Accordion>
+  
+  <Accordion title="Consistency">
+    Check that terminology is consistent throughout the game (e.g., always using the same term for "ride" or "guest").
+  </Accordion>
+  
+  <Accordion title="Context">
+    Verify translations make sense in context. A string that looks good in isolation might not fit where it's used.
+  </Accordion>
+  
+  <Accordion title="Special Characters">
+    Test that special characters in your language display correctly (accents, diacritics, etc.).
+  </Accordion>
+</AccordionGroup>
+
+## Translation Status
+
+You can check translation completion status:
+
+1. Visit the [Localisation repository](https://github.com/OpenRCT2/Localisation)
+2. Check the README for language completion percentages
+3. Look for files with many empty strings (`: ` with nothing after)
+
+## Community
+
+### Discord Channels
+
+<CardGroup cols={2}>
+  <Card title="#localisation" icon="discord" href="https://discord.gg/sxnrvX9">
+    Main channel for translation discussion and coordination
+  </Card>
+  
+  <Card title="Language-Specific" icon="comments">
+    Some languages have dedicated channels for discussion in that language
+  </Card>
+</CardGroup>
+
+### Getting Help
+
+If you need help with translation:
+
+- **Discord**: Ask in #localisation channel
+- **GitHub Issues**: Create an issue in the Localisation repository
+- **Context Questions**: Ask developers about how/where a string is used
+
+## Credits
+
+Translators are credited in the game's credits and in the repository's contributor list. Thank you for helping make OpenRCT2 accessible to players worldwide!
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Can I translate to a language not yet in the repository?">
+    Yes! Start by copying `en-GB.txt` and renaming it with the appropriate language code (e.g., `pt-BR.txt` for Brazilian Portuguese). Submit a pull request to the Localisation repository.
+  </Accordion>
+  
+  <Accordion title="What if I only want to translate part of the game?">
+    Partial translations are welcome! Submit what you have, and it will be included. Other translators or future contributors can complete it.
+  </Accordion>
+  
+  <Accordion title="How do I know which strings need updating?">
+    Check the Localisation repository issues for announcements about changed strings. You can also compare your language file with `en-GB.txt` to find missing translations.
+  </Accordion>
+  
+  <Accordion title="Can I improve an existing translation?">
+    Absolutely! If you notice errors or awkward phrasing in your language, submit improvements. This is a collaborative effort.
+  </Accordion>
+  
+  <Accordion title="Why was my translation changed?">
+    Other translators or native speakers may suggest improvements. Check the pull request discussion or ask in Discord. We aim for the best possible translations.
+  </Accordion>
+  
+  <Accordion title="How often are translations included in releases?">
+    Translations merged to the Localisation repository are automatically synced to the main repository nightly. They'll be included in the next development build and subsequent releases.
+  </Accordion>
+</AccordionGroup>
+
+## Technical Details
+
+### String Loading
+
+OpenRCT2 loads language files at startup:
+
+1. Scans `data/language/` directory
+2. Parses each `.txt` file
+3. Builds string table in memory
+4. Falls back to English for missing translations
+
+See `src/openrct2/localisation/` for implementation details.
+
+### String IDs
+
+String IDs in `StringIds.h` are compile-time constants:
+
+```cpp
+// src/localisation/StringIds.h
+constexpr StringId STR_0002 = 2;    // Spiral Roller Coaster
+```
+
+These map to the `STR_XXXX` identifiers in language files.
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Contributing Code" icon="code" href="/development/contributing">
+    Learn about contributing code to OpenRCT2
+  </Card>
+  
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Understand OpenRCT2's codebase structure
+  </Card>
+  
+  <Card title="Localisation Repo" icon="github" href="https://github.com/OpenRCT2/Localisation">
+    Visit the translation repository
+  </Card>
+  
+  <Card title="Discord" icon="discord" href="https://discord.gg/sxnrvX9">
+    Join the localisation discussion
+  </Card>
+</CardGroup>

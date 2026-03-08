@@ -1,0 +1,402 @@
+---
+title: Building on Windows Subsystem for Linux
+description: Step-by-step guide to building OpenRCT2 on WSL
+---
+
+This guide covers building OpenRCT2 from source using Windows Subsystem for Linux (WSL). This is a great alternative to building natively on Windows, as it provides a Linux environment with easier dependency management.
+
+## Prerequisites
+
+### Installing WSL
+
+<Steps>
+  <Step title="Enable WSL">
+    Open PowerShell as Administrator and run:
+    
+    ```powershell
+    wsl --install
+    ```
+    
+    This installs WSL 2 with Ubuntu by default.
+  </Step>
+
+  <Step title="Restart your computer">
+    After installation completes, restart Windows.
+  </Step>
+
+  <Step title="Set up Ubuntu">
+    Launch "Ubuntu" from the Start Menu and complete the initial setup (username and password).
+  </Step>
+
+  <Step title="Update packages">
+    ```bash
+    sudo apt update
+    sudo apt upgrade -y
+    ```
+  </Step>
+</Steps>
+
+### Alternative: Installing a specific distribution
+
+To use a different Linux distribution:
+
+```powershell
+# List available distributions
+wsl --list --online
+
+# Install a specific distribution
+wsl --install -d Ubuntu-22.04
+```
+
+## Installing Build Dependencies
+
+Once inside your WSL Ubuntu environment:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  git cmake ninja-build \
+  g++ pkg-config \
+  libsdl2-dev \
+  libzip-dev libpng-dev \
+  libssl-dev libcurl4-openssl-dev \
+  libfreetype6-dev libfontconfig1-dev \
+  libicu-dev libzstd-dev \
+  zlib1g-dev
+
+# Optional dependencies
+sudo apt install -y \
+  libflac-dev libvorbis-dev libogg-dev \
+  mesa-common-dev libgl1-mesa-dev \
+  ccache
+```
+
+<Info>
+  These are the same dependencies as building on native Linux. See the [Linux build guide](/building/linux) for distribution-specific package names.
+</Info>
+
+## Building OpenRCT2
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/OpenRCT2/OpenRCT2.git
+    cd OpenRCT2
+    ```
+    
+    <Info>
+      You can clone the repository on the Windows filesystem (`/mnt/c/Users/...`) and build from WSL, but performance will be better if you clone directly in WSL's filesystem (`~/`).
+    </Info>
+  </Step>
+
+  <Step title="Create a build directory">
+    ```bash
+    mkdir build
+    cd build
+    ```
+  </Step>
+
+  <Step title="Configure the build">
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ```
+  </Step>
+
+  <Step title="Compile">
+    ```bash
+    ninja
+    ```
+    
+    The build will generate the `openrct2` GUI binary and `openrct2-cli` headless server.
+  </Step>
+</Steps>
+
+## Running OpenRCT2 from WSL
+
+### Option 1: Using WSLg (Recommended for WSL 2)
+
+WSL 2 includes WSLg, which provides GPU acceleration and native GUI support:
+
+```bash
+./openrct2
+```
+
+OpenRCT2 will launch with a graphical window on your Windows desktop.
+
+<Info>
+  **WSLg** is available in Windows 11 and Windows 10 (build 19044+). It provides the best experience for running GUI applications from WSL.
+</Info>
+
+### Option 2: Using X Server (WSL 1 or older WSL 2)
+
+If WSLg is not available, install an X server on Windows:
+
+<Steps>
+  <Step title="Install VcXsrv or X410">
+    - **VcXsrv**: [Download](https://sourceforge.net/projects/vcxsrv/)
+    - **X410**: [Microsoft Store](https://www.microsoft.com/store/productId/9NLP712ZMN9Q)
+  </Step>
+
+  <Step title="Launch X Server">
+    For VcXsrv:
+    - Run XLaunch
+    - Select "Multiple windows"
+    - Display number: 0
+    - Start "No Client"
+    - Check "Disable access control"
+  </Step>
+
+  <Step title="Configure display in WSL">
+    ```bash
+    # For WSL 2
+    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+    
+    # For WSL 1
+    export DISPLAY=:0
+    ```
+    
+    Add to `~/.bashrc` to make permanent:
+    
+    ```bash
+    echo 'export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '\'{print $2}'\'):0' >> ~/.bashrc
+    ```
+  </Step>
+
+  <Step title="Run OpenRCT2">
+    ```bash
+    ./openrct2
+    ```
+  </Step>
+</Steps>
+
+### Option 3: Headless Server Only
+
+For running a multiplayer server without GUI:
+
+```bash
+./openrct2-cli host /path/to/save.sv6
+```
+
+This doesn't require any graphical setup.
+
+## Accessing Windows Files
+
+Windows drives are mounted in WSL at `/mnt/`:
+
+```bash
+# Access C: drive
+cd /mnt/c/Users/YourUsername/Documents
+
+# Copy RCT2 files from Windows
+cp -r /mnt/c/Program\ Files\ \(x86\)/Atari/RollerCoaster\ Tycoon\ 2/ ~/rct2/
+```
+
+<Warning>
+  While you can access Windows files from WSL, building and running OpenRCT2 entirely within the WSL filesystem (`~/`) provides better performance.
+</Warning>
+
+## Accessing WSL Files from Windows
+
+You can access WSL files from Windows Explorer:
+
+```bash
+# Open current directory in Windows Explorer
+explorer.exe .
+```
+
+Or navigate to `\\wsl$\Ubuntu\home\yourusername\` in Windows Explorer.
+
+## Build Options
+
+### Portable Build
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DPORTABLE=ON
+```
+
+### Headless Server Build
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_GUI=ON
+```
+
+### Debug Build with Tests
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DWITH_TESTS=ON
+
+ninja
+
+# Run tests
+ctest --output-on-failure
+```
+
+## Performance Optimization
+
+### Using CCache
+
+Install CCache for faster rebuilds:
+
+```bash
+sudo apt install ccache
+```
+
+CMake will automatically detect and use it.
+
+### Parallel Builds
+
+Ninja automatically uses all CPU cores. To limit:
+
+```bash
+ninja -j4  # Use 4 cores
+```
+
+### File System Performance
+
+<Info>
+  For best performance, keep your source code and build artifacts in the WSL filesystem (`~/...`), not on the Windows filesystem (`/mnt/c/...`).
+</Info>
+
+File I/O is significantly faster on WSL's native ext4 filesystem than on NTFS through the `/mnt` mount.
+
+## Troubleshooting
+
+### Cannot connect to display
+
+If OpenRCT2 won't launch graphically:
+
+```bash
+# Check DISPLAY is set
+echo $DISPLAY
+
+# Test X server connection
+sudo apt install x11-apps
+xclock
+```
+
+If `xclock` doesn't work, your X server isn't configured correctly.
+
+### WSLg not available
+
+Check your Windows version:
+
+```powershell
+winver
+```
+
+WSLg requires:
+- Windows 11, or
+- Windows 10 build 19044 or later
+
+Update Windows if needed, or use an X server (Option 2 above).
+
+### Missing dependencies
+
+If CMake reports missing packages:
+
+```bash
+# Verify package is installed
+dpkg -l | grep libsdl2-dev
+
+# Reinstall if needed
+sudo apt install --reinstall libsdl2-dev
+```
+
+### GCC version too old
+
+<Warning>
+  GCC 12+ is required. Ubuntu 22.04 includes GCC 11 by default.
+</Warning>
+
+Install GCC 12:
+
+```bash
+sudo apt install gcc-12 g++-12
+export CC=gcc-12
+export CXX=g++-12
+```
+
+Or use Clang:
+
+```bash
+sudo apt install clang
+export CC=clang
+export CXX=clang++
+```
+
+### OpenGL/Mesa errors
+
+If you encounter OpenGL issues with WSLg:
+
+```bash
+# Disable OpenGL
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_OPENGL=ON
+```
+
+### Permission denied on /mnt/c
+
+If you get permission errors accessing Windows files:
+
+```bash
+# Check mount options
+mount | grep /mnt/c
+
+# Copy to WSL filesystem instead
+cp -r /mnt/c/path/to/source ~/
+cd ~/source
+```
+
+## Comparing WSL vs Native Windows
+
+| Feature | WSL | Native Windows |
+|---------|-----|----------------|
+| Dependency management | Easy (apt) | Complex (vcpkg) |
+| Build speed | Fast | Slower |
+| Setup complexity | Simple | Moderate |
+| Integration with Windows | Good | Native |
+| Debugging tools | GDB | Visual Studio |
+| File performance | Fast (WSL fs) | Fast |
+
+## WSL Tips
+
+### Limiting WSL memory usage
+
+Create or edit `%USERPROFILE%\.wslconfig` on Windows:
+
+```ini
+[wsl2]
+memory=8GB
+processors=4
+```
+
+### Shutting down WSL
+
+From Windows PowerShell:
+
+```powershell
+# Shutdown WSL
+wsl --shutdown
+
+# List running distributions
+wsl --list --running
+```
+
+### Updating WSL
+
+```powershell
+wsl --update
+```
+
+## Next Steps
+
+- [Building on Linux](/building/linux) - Full Linux build documentation
+- [Building on Windows](/building/windows) - Native Windows build method
+- [Contributing](/development/contributing) - Guidelines for contributing code

@@ -1,0 +1,347 @@
+---
+title: Network API
+description: Network APIs for multiplayer and server management in OpenRCT2
+---
+
+The `network` object provides APIs for managing multiplayer games, including player management, groups, permissions, and messaging. Use `network.mode` to determine whether the game is running as a client, server, or in single player mode.
+
+## Properties
+
+<ResponseField name="mode" type="NetworkMode" readonly>
+  The current network mode:
+  - `"none"` - Single player mode
+  - `"server"` - Multiplayer server
+  - `"client"` - Multiplayer client
+  
+  ```javascript
+  if (network.mode === 'server') {
+    console.log('Running as server');
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="numGroups" type="number" readonly>
+  The number of multiplayer groups in the server.
+  ```javascript
+  console.log(`Groups: ${network.numGroups}`);
+  ```
+</ResponseField>
+
+<ResponseField name="numPlayers" type="number" readonly>
+  The number of players currently in the server.
+  ```javascript
+  console.log(`Players online: ${network.numPlayers}`);
+  ```
+</ResponseField>
+
+<ResponseField name="groups" type="PlayerGroup[]" readonly>
+  All multiplayer groups within the server. Groups are used to assign roles and permissions to players.
+  ```javascript
+  network.groups.forEach(group => {
+    console.log(`${group.name}: ${group.permissions.length} permissions`);
+  });
+  ```
+</ResponseField>
+
+<ResponseField name="players" type="Player[]" readonly>
+  All players currently in the server.
+  ```javascript
+  network.players.forEach(player => {
+    console.log(`${player.name} (Ping: ${player.ping}ms)`);
+  });
+  ```
+</ResponseField>
+
+<ResponseField name="currentPlayer" type="Player" readonly>
+  The player this instance of the game is controlling.
+  ```javascript
+  console.log(`You are: ${network.currentPlayer.name}`);
+  ```
+</ResponseField>
+
+<ResponseField name="defaultGroup" type="number">
+  The default group ID that new players joining the server should be assigned to.
+  ```javascript
+  network.defaultGroup = 1; // Assign new players to group 1
+  ```
+</ResponseField>
+
+<ResponseField name="stats" type="NetworkStats" readonly>
+  Various statistics related to networking.
+  ```javascript
+  console.log('Bytes received:', network.stats.bytesReceived);
+  console.log('Bytes sent:', network.stats.bytesSent);
+  ```
+</ResponseField>
+
+## Group Management
+
+### addGroup()
+
+Creates a new multiplayer group for managing player permissions.
+
+```javascript
+network.addGroup();
+console.log('New group created');
+```
+
+### getGroup()
+
+Gets the player group with the specified ID.
+
+<ParamField path="id" type="number" required>
+  The group ID (or group index prior to API version 77).
+</ParamField>
+
+```javascript
+const group = network.getGroup(1);
+console.log('Group name:', group.name);
+console.log('Permissions:', group.permissions);
+```
+
+### removeGroup()
+
+Removes the player group with the specified ID.
+
+<ParamField path="id" type="number" required>
+  The group ID (or group index prior to API version 77).
+</ParamField>
+
+```javascript
+network.removeGroup(2);
+console.log('Group removed');
+```
+
+## Player Management
+
+### getPlayer()
+
+Gets the player with the specified ID.
+
+<ParamField path="id" type="number" required>
+  The player ID (or player index prior to API version 77).
+</ParamField>
+
+```javascript
+const player = network.getPlayer(0);
+console.log('Name:', player.name);
+console.log('Group:', player.group);
+console.log('Ping:', player.ping);
+console.log('Commands ran:', player.commandsRan);
+console.log('Money spent:', player.moneySpent);
+```
+
+### kickPlayer()
+
+Kicks the player with the specified ID from the server.
+
+<ParamField path="id" type="number" required>
+  The player ID (or player index prior to API version 77).
+</ParamField>
+
+```javascript
+network.kickPlayer(3);
+console.log('Player kicked');
+```
+
+## Messaging
+
+### sendMessage()
+
+Sends a chat message to players.
+
+<Tabs>
+  <Tab title="Broadcast to All">
+    <ParamField path="message" type="string" required>
+      The message text to broadcast to all players.
+    </ParamField>
+    
+    ```javascript
+    network.sendMessage('Welcome to the server!');
+    network.sendMessage('Server will restart in 5 minutes.');
+    ```
+  </Tab>
+  <Tab title="Send to Specific Players">
+    <ParamField path="message" type="string" required>
+      The message text.
+    </ParamField>
+    <ParamField path="players" type="number[]" required>
+      List of player IDs that should receive the message.
+    </ParamField>
+    
+    ```javascript
+    // Send message to players 0 and 1
+    network.sendMessage('Private message', [0, 1]);
+    
+    // Send to all admins
+    const adminGroup = network.groups.find(g => g.name === 'Admin');
+    const adminIds = network.players
+      .filter(p => p.group === adminGroup.id)
+      .map(p => p.id);
+    network.sendMessage('Admin notification', adminIds);
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+Messages are transmitted via the server even if the server is not a recipient.
+</Note>
+
+## Socket Operations
+
+### createListener()
+
+Creates a new listener that can accept TCP connections on a given port.
+
+```javascript
+const listener = network.createListener();
+
+listener.on('connection', (socket) => {
+  console.log('New connection!');
+  
+  socket.on('data', (data) => {
+    console.log('Received:', data);
+    socket.write('Hello from OpenRCT2!');
+  });
+  
+  socket.on('close', (hadError) => {
+    console.log('Connection closed');
+  });
+});
+
+listener.listen(8080, '0.0.0.0');
+console.log('Listening on port 8080');
+```
+
+### createSocket()
+
+Creates a new TCP client that can connect to a server.
+
+```javascript
+const socket = network.createSocket();
+
+socket.on('data', (data) => {
+  console.log('Received:', data);
+});
+
+socket.on('close', (hadError) => {
+  console.log('Disconnected');
+});
+
+socket.on('error', (error) => {
+  console.log('Error:', error);
+});
+
+socket.connect(8080, 'localhost', () => {
+  console.log('Connected!');
+  socket.write('Hello server!');
+});
+```
+
+## Type Definitions
+
+### Player
+
+Represents a player within a network game.
+
+<ResponseField name="id" type="number" readonly>
+  The unique ID for the player.
+</ResponseField>
+
+<ResponseField name="name" type="string" readonly>
+  The name of the player.
+</ResponseField>
+
+<ResponseField name="group" type="number">
+  The group ID the player is a member of.
+</ResponseField>
+
+<ResponseField name="ping" type="number" readonly>
+  The latest measured ping in milliseconds.
+</ResponseField>
+
+<ResponseField name="commandsRan" type="number" readonly>
+  The number of actions successfully executed by the player.
+</ResponseField>
+
+<ResponseField name="moneySpent" type="number" readonly>
+  The total amount of cash spent from actions performed by the player.
+</ResponseField>
+
+<ResponseField name="ipAddress" type="string" readonly>
+  The player's IP address.
+</ResponseField>
+
+<ResponseField name="publicKeyHash" type="string" readonly>
+  A hash of the player's public key used for authentication.
+</ResponseField>
+
+### PlayerGroup
+
+Represents a group for assigning roles and permissions.
+
+<ResponseField name="id" type="number" readonly>
+  The unique ID for the group.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the group.
+</ResponseField>
+
+<ResponseField name="permissions" type="PermissionType[]">
+  The permissions granted to players in this group. Can be:
+  - `"chat"`, `"terraform"`, `"set_water_level"`, `"toggle_pause"`
+  - `"create_ride"`, `"remove_ride"`, `"build_ride"`, `"ride_properties"`
+  - `"scenery"`, `"path"`, `"clear_landscape"`
+  - `"guest"`, `"staff"`, `"park_properties"`, `"park_funding"`
+  - `"kick_player"`, `"modify_groups"`, `"set_player_group"`
+  - `"cheat"`, `"toggle_scenery_cluster"`, `"passwordless_login"`
+  - `"modify_tile"`, `"edit_scenario_options"`
+</ResponseField>
+
+## Usage Examples
+
+### Server Welcome Message
+
+```javascript
+if (network.mode === 'server') {
+  context.subscribe('network.join', (e) => {
+    const player = network.getPlayer(e.player);
+    network.sendMessage(`Welcome ${player.name}!`);
+  });
+}
+```
+
+### Admin Commands
+
+```javascript
+context.subscribe('network.chat', (e) => {
+  const player = network.getPlayer(e.player);
+  const group = network.getGroup(player.group);
+  
+  if (e.message.startsWith('!kick ')) {
+    if (group.permissions.includes('kick_player')) {
+      const targetName = e.message.substring(6);
+      const target = network.players.find(p => p.name === targetName);
+      if (target) {
+        network.kickPlayer(target.id);
+        network.sendMessage(`${targetName} was kicked by ${player.name}`);
+      }
+    }
+  }
+});
+```
+
+### Player Statistics
+
+```javascript
+function showPlayerStats() {
+  console.log('=== Player Statistics ===');
+  network.players.forEach(player => {
+    console.log(`${player.name}:`);
+    console.log(`  Ping: ${player.ping}ms`);
+    console.log(`  Actions: ${player.commandsRan}`);
+    console.log(`  Spent: ${player.moneySpent}`);
+  });
+}
+```

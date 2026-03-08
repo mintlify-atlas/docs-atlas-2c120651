@@ -1,0 +1,234 @@
+---
+title: Getting Started with Plugins
+description: Create your first OpenRCT2 plugin with step-by-step instructions
+---
+
+This guide will walk you through creating your first OpenRCT2 plugin.
+
+## Creating Your First Plugin
+
+<Steps>
+  <Step title="Locate your plugin directory">
+    Find your OpenRCT2 user directory:
+    
+    - **Windows:** `C:\Users\YourName\Documents\OpenRCT2\plugin`
+    - **Mac:** `/Users/YourName/Library/Application Support/OpenRCT2/plugin`
+    - **Linux:** `$XDG_CONFIG_HOME/OpenRCT2/plugin` or `$HOME/.config/OpenRCT2/plugin`
+    
+    Alternatively, use the "Open custom content folder" option under the red toolbox button in the game's title screen, then navigate to the `plugin` folder.
+  </Step>
+
+  <Step title="Create a new JavaScript file">
+    Create a new file called `my-first-plugin.js` in the `plugin` directory.
+  </Step>
+
+  <Step title="Add the plugin template">
+    Copy this template code into your file:
+
+    ```js
+    function main() {
+        console.log("Your plugin has started!");
+    }
+
+    registerPlugin({
+        name: 'Your Plugin',
+        version: '1.0',
+        authors: ['Your Name'],
+        type: 'remote',
+        licence: 'MIT',
+        targetApiVersion: 34,
+        minApiVersion: 10,
+        main: main
+    });
+    ```
+  </Step>
+
+  <Step title="Test your plugin">
+    Launch OpenRCT2 and open any park. The message "Your plugin has started!" will be logged to the terminal screen (`stdout`).
+    
+    <Note>
+    On Windows, make sure to run `openrct2.com` instead of `openrct2.exe` so you can interact with the `stdin`/`stdout` console.
+    </Note>
+  </Step>
+</Steps>
+
+## Understanding the Plugin Template
+
+### Plugin Metadata
+
+The `registerPlugin()` function registers your plugin with OpenRCT2. Let's break down the metadata:
+
+- **name:** The display name of your plugin
+- **version:** Your plugin's version number
+- **authors:** Your name or an array of contributor names
+- **type:** The plugin type (`local`, `remote`, or `intransient`) - see [Plugin Types](/scripting/plugin-types)
+- **licence:** The license identifier (e.g., `MIT`, `GPL-3.0`) - see [SPDX License List](https://spdx.org/licenses/)
+- **targetApiVersion:** The OpenRCT2 API version your plugin targets
+- **minApiVersion:** The minimum OpenRCT2 API version required
+- **main:** The entry point function that runs when your plugin loads
+
+### API Versioning
+
+#### targetApiVersion
+
+In case there are breaking API changes, plugins can use this to keep the old API behavior. For example, in version 34, `Entity.type` would no longer return `peep` for guests and staff - instead it would return either `guest` or `staff`. If your plugin expects `peep`, you can specify version 33 to keep the old behavior.
+
+<Warning>
+If `targetApiVersion` is not specified, it will default to version 33 and the plugin will log an error on startup. It is recommended to specify the current API version.
+</Warning>
+
+#### minApiVersion
+
+This prevents your script from loading on older versions of OpenRCT2 that don't support all the APIs you require.
+
+```js
+registerPlugin({
+    name: 'Your Plugin',
+    version: '1.2',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    minApiVersion: 7, // Requires OpenRCT2 plugin API v7 or higher
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+When new APIs are introduced or behaviors change, a new version number is issued, which you can find in the OpenRCT2 [source code](https://github.com/OpenRCT2/OpenRCT2/blob/develop/src/openrct2/scripting/ScriptEngine.h) or changelog.
+
+## Console and REPL
+
+The console is a JavaScript interpreter (REPL - Read-Eval-Print Loop), similar to the console found in web browsers when you press F12. You can write and test expressions interactively.
+
+### Using console.log
+
+```js
+function main() {
+    console.log("Plugin started!");
+    console.log("Park name:", park.name);
+    console.log("Current cash:", park.cash);
+}
+```
+
+## Reloading Your Plugin
+
+By default, when you make changes to your script, you must exit your current game and open it again for the script to reload. However, you can enable hot reload for rapid development - see [Hot Reload](/scripting/hot-reload).
+
+## Example: Adding Cash Every Day
+
+Here's a simple plugin that adds cash to your park every in-game day:
+
+```js
+function main() {
+    console.log("Daily cash bonus plugin loaded!");
+    
+    context.subscribe('interval.day', function() {
+        park.cash += 10000;
+        console.log("Added $10,000 to park!");
+    });
+}
+
+registerPlugin({
+    name: 'Daily Cash Bonus',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## Using TypeScript
+
+For better development experience, you can use TypeScript:
+
+<Steps>
+  <Step title="Add reference to openrct2.d.ts">
+    Add this line to the top of your TypeScript file:
+
+    ```typescript
+    /// <reference path="/path/to/openrct2.d.ts" />
+    ```
+  </Step>
+
+  <Step title="Write TypeScript code">
+    ```typescript
+    /// <reference path="./openrct2.d.ts" />
+
+    function main(): void {
+        console.log("TypeScript plugin loaded!");
+        
+        context.subscribe('interval.day', () => {
+            park.cash += 10000;
+        });
+    }
+
+    registerPlugin({
+        name: 'TypeScript Plugin',
+        version: '1.0',
+        authors: ['Your Name'],
+        type: 'local',
+        licence: 'MIT',
+        targetApiVersion: 34,
+        main: main
+    });
+    ```
+  </Step>
+
+  <Step title="Compile to JavaScript">
+    Use the TypeScript compiler to transpile to ES5:
+
+    ```bash
+    tsc --target ES5 my-plugin.ts
+    ```
+
+    This creates `my-plugin.js` which can be loaded by OpenRCT2.
+  </Step>
+</Steps>
+
+## Debugging
+
+Debugging has not yet been implemented, but is planned. In the meantime, use `console.log()` to print useful information for diagnosing problems.
+
+```js
+function main() {
+    console.log("Plugin loaded");
+    console.log("Network mode:", network.mode);
+    console.log("Number of rides:", map.rides.length);
+    
+    try {
+        // Your code here
+    } catch (error) {
+        console.log("Error:", error);
+    }
+}
+```
+
+## Choosing a License
+
+The authors must define a licence for the plugin, making it clear whether that plugin can be altered, copied, etc. Good reference material is listed on [ChooseALicense](https://choosealicense.com/appendix/). Try to pick one of them and use its corresponding identifier from [SPDX](https://spdx.org/licenses/).
+
+## ES5 Limitations
+
+<Warning>
+OpenRCT2 uses Duktape which only has full support for ES5 JavaScript and limited ES6+ support.
+</Warning>
+
+Some ES6 functions are not available:
+- `Array.find()` and `Array.includes()` are not supported
+- Arrow functions, classes, `let` keyword require transpilation
+- async/await, spread operator, destructuring, template literals require transpilation
+
+Resources:
+- [List of ES5 objects and functions](https://github.com/microsoft/TypeScript/blob/main/src/lib/es5.d.ts)
+- [ES6+ features implemented in Duktape](https://wiki.duktape.org/postes5features)
+
+To use ES6+ features, use a transpiler like Babel or TypeScript with polyfills.
+
+## Next Steps
+
+- Learn about [Plugin Types](/scripting/plugin-types) to understand local, remote, and intransient plugins
+- Explore [Game Actions](/scripting/game-actions) for multiplayer-safe modifications
+- Enable [Hot Reload](/scripting/hot-reload) for rapid development
+- Check out [Examples](/scripting/examples) for more plugin ideas

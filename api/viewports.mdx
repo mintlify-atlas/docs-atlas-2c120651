@@ -1,0 +1,471 @@
+---
+title: Viewport API
+description: Viewport APIs for camera control and view manipulation in OpenRCT2
+---
+
+Viewports control the camera view in OpenRCT2. The main viewport is accessed via `ui.mainViewport`, and custom viewports can be embedded in windows.
+
+## Accessing Viewports
+
+<Tabs>
+  <Tab title="Main Viewport">
+    ```javascript
+    if (typeof ui !== 'undefined') {
+      const viewport = ui.mainViewport;
+      console.log('Rotation:', viewport.rotation);
+      console.log('Zoom:', viewport.zoom);
+    }
+    ```
+  </Tab>
+  <Tab title="Custom Viewport">
+    ```javascript
+    const window = ui.openWindow({
+      classification: 'custom-view',
+      title: 'Custom View',
+      width: 400,
+      height: 300,
+      widgets: [
+        {
+          type: 'viewport',
+          name: 'customViewport',
+          x: 5,
+          y: 20,
+          width: 390,
+          height: 275
+        }
+      ]
+    });
+    
+    const viewportWidget = window.findWidget('customViewport');
+    const viewport = viewportWidget.viewport;
+    ```
+  </Tab>
+</Tabs>
+
+## Properties
+
+<ResponseField name="left" type="number">
+  The left edge of the viewport in screen pixels.
+  ```javascript
+  console.log(`Viewport left: ${viewport.left}`);
+  ```
+</ResponseField>
+
+<ResponseField name="top" type="number">
+  The top edge of the viewport in screen pixels.
+  ```javascript
+  console.log(`Viewport top: ${viewport.top}`);
+  ```
+</ResponseField>
+
+<ResponseField name="right" type="number">
+  The right edge of the viewport in screen pixels.
+  ```javascript
+  console.log(`Viewport right: ${viewport.right}`);
+  ```
+</ResponseField>
+
+<ResponseField name="bottom" type="number">
+  The bottom edge of the viewport in screen pixels.
+  ```javascript
+  console.log(`Viewport bottom: ${viewport.bottom}`);
+  ```
+</ResponseField>
+
+<ResponseField name="rotation" type="number">
+  The rotation of the camera (0-3).
+  - 0: North
+  - 1: East
+  - 2: South
+  - 3: West
+  
+  ```javascript
+  viewport.rotation = 2; // Face south
+  ```
+</ResponseField>
+
+<ResponseField name="zoom" type="number">
+  The zoom level of the viewport.
+  - 0: 1:1 (closest)
+  - 1: 2:1
+  - 2: 4:1
+  - 3: 8:1 (furthest)
+  
+  ```javascript
+  viewport.zoom = 0; // Maximum zoom in
+  viewport.zoom = 3; // Maximum zoom out
+  ```
+</ResponseField>
+
+<ResponseField name="visibilityFlags" type="number">
+  Bitmask controlling what is visible in the viewport.
+  
+  ```javascript
+  console.log(`Visibility flags: ${viewport.visibilityFlags}`);
+  ```
+</ResponseField>
+
+## Methods
+
+### getCentrePosition()
+
+Gets the center position of the viewport in map coordinates.
+
+```javascript
+const center = viewport.getCentrePosition();
+console.log(`Viewport center: (${center.x}, ${center.y})`);
+```
+
+### moveTo()
+
+Immediately moves the viewport to center on the specified position.
+
+<ParamField path="position" type="CoordsXY | CoordsXYZ" required>
+  The target position in map coordinates.
+</ParamField>
+
+<Tabs>
+  <Tab title="2D Position">
+    ```javascript
+    // Move to tile coordinates
+    viewport.moveTo({ x: 32 * 64, y: 32 * 64 });
+    ```
+  </Tab>
+  <Tab title="3D Position">
+    ```javascript
+    // Move to specific height
+    viewport.moveTo({ x: 2048, y: 2048, z: 64 });
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+`moveTo()` instantly changes the viewport position without animation.
+</Note>
+
+### scrollTo()
+
+Smoothly scrolls the viewport to center on the specified position.
+
+<ParamField path="position" type="CoordsXY | CoordsXYZ" required>
+  The target position in map coordinates.
+</ParamField>
+
+```javascript
+// Smooth scroll to position
+viewport.scrollTo({ x: 2048, y: 2048 });
+
+// Scroll to entity
+const guest = map.getEntity(100);
+if (guest) {
+  viewport.scrollTo({ x: guest.x, y: guest.y, z: guest.z });
+}
+```
+
+<Note>
+`scrollTo()` animates the camera movement for a smooth transition.
+</Note>
+
+## Usage Examples
+
+### Center on Park Entrance
+
+```javascript
+function centerOnParkEntrance() {
+  // Find park entrance
+  for (let y = 0; y < map.size.y; y++) {
+    for (let x = 0; x < map.size.x; x++) {
+      const tile = map.getTile(x, y);
+      const entrance = tile.elements.find(e => 
+        e.type === 'entrance' && e.object === 0
+      );
+      
+      if (entrance) {
+        ui.mainViewport.scrollTo({
+          x: x * 32,
+          y: y * 32,
+          z: entrance.baseZ
+        });
+        return;
+      }
+    }
+  }
+  console.log('Park entrance not found');
+}
+```
+
+### Rotate Camera
+
+```javascript
+function rotateCamera(direction) {
+  const viewport = ui.mainViewport;
+  
+  if (direction === 'clockwise') {
+    viewport.rotation = (viewport.rotation + 1) % 4;
+  } else {
+    viewport.rotation = (viewport.rotation + 3) % 4;
+  }
+  
+  const rotationNames = ['North', 'East', 'South', 'West'];
+  console.log(`Facing: ${rotationNames[viewport.rotation]}`);
+}
+
+// Rotate clockwise
+rotateCamera('clockwise');
+
+// Rotate counter-clockwise
+rotateCamera('counter-clockwise');
+```
+
+### Zoom Controls
+
+```javascript
+function zoomIn() {
+  const viewport = ui.mainViewport;
+  if (viewport.zoom > 0) {
+    viewport.zoom--;
+    console.log(`Zoom level: ${viewport.zoom}`);
+  }
+}
+
+function zoomOut() {
+  const viewport = ui.mainViewport;
+  if (viewport.zoom < 3) {
+    viewport.zoom++;
+    console.log(`Zoom level: ${viewport.zoom}`);
+  }
+}
+
+function resetZoom() {
+  ui.mainViewport.zoom = 0;
+  console.log('Zoom reset to 1:1');
+}
+```
+
+### Follow Entity
+
+```javascript
+function followEntity(entityId) {
+  let following = true;
+  
+  const subscription = context.subscribe('interval.tick', () => {
+    if (!following) {
+      subscription.dispose();
+      return;
+    }
+    
+    const entity = map.getEntity(entityId);
+    if (entity) {
+      const center = ui.mainViewport.getCentrePosition();
+      const distance = Math.abs(center.x - entity.x) + Math.abs(center.y - entity.y);
+      
+      // Only move if entity has moved significantly
+      if (distance > 100) {
+        ui.mainViewport.moveTo({ x: entity.x, y: entity.y, z: entity.z });
+      }
+    } else {
+      following = false;
+    }
+  });
+  
+  return () => { following = false; };
+}
+
+// Follow a guest
+const guests = map.getAllEntities('guest');
+if (guests.length > 0) {
+  const stopFollowing = followEntity(guests[0].id);
+  
+  // Stop after 30 seconds
+  context.setTimeout(stopFollowing, 30000);
+}
+```
+
+### Multi-Viewport Window
+
+```javascript
+ui.openWindow({
+  classification: 'multi-view',
+  title: 'Multi-View Monitor',
+  width: 610,
+  height: 330,
+  widgets: [
+    {
+      type: 'viewport',
+      name: 'view1',
+      x: 5,
+      y: 20,
+      width: 300,
+      height: 150
+    },
+    {
+      type: 'viewport',
+      name: 'view2',
+      x: 305,
+      y: 20,
+      width: 300,
+      height: 150
+    },
+    {
+      type: 'label',
+      x: 5,
+      y: 175,
+      width: 300,
+      height: 14,
+      text: 'Park Entrance'
+    },
+    {
+      type: 'label',
+      x: 305,
+      y: 175,
+      width: 300,
+      height: 14,
+      text: 'Most Popular Ride'
+    },
+    {
+      type: 'button',
+      x: 255,
+      y: 290,
+      width: 100,
+      height: 24,
+      text: 'Refresh Views',
+      onClick: function() {
+        // Update viewport positions
+        const window = this.window;
+        const view1 = window.findWidget('view1').viewport;
+        const view2 = window.findWidget('view2').viewport;
+        
+        // Position view1 at entrance
+        view1.moveTo({ x: 1024, y: 1024 });
+        
+        // Position view2 at most popular ride
+        const rides = map.rides
+          .filter(r => r.classification === 'ride')
+          .sort((a, b) => b.totalCustomers - a.totalCustomers);
+        
+        if (rides.length > 0) {
+          const station = rides[0].stations[0];
+          view2.moveTo(station.start);
+        }
+      }
+    }
+  ]
+});
+```
+
+### Camera Tour
+
+```javascript
+function startCameraTour() {
+  const points = [
+    { x: 1024, y: 1024, zoom: 0, rotation: 0 },
+    { x: 2048, y: 2048, zoom: 1, rotation: 1 },
+    { x: 3072, y: 1024, zoom: 0, rotation: 2 },
+    { x: 2048, y: 512, zoom: 2, rotation: 3 }
+  ];
+  
+  let currentPoint = 0;
+  const viewport = ui.mainViewport;
+  
+  const interval = context.setInterval(() => {
+    if (currentPoint >= points.length) {
+      context.clearInterval(interval);
+      console.log('Tour complete');
+      return;
+    }
+    
+    const point = points[currentPoint];
+    viewport.zoom = point.zoom;
+    viewport.rotation = point.rotation;
+    viewport.scrollTo({ x: point.x, y: point.y });
+    
+    currentPoint++;
+  }, 5000); // Move to next point every 5 seconds
+}
+```
+
+### Viewport Bounds
+
+```javascript
+function getViewportSize() {
+  const viewport = ui.mainViewport;
+  
+  return {
+    width: viewport.right - viewport.left,
+    height: viewport.bottom - viewport.top
+  };
+}
+
+function isPositionVisible(x, y) {
+  const viewport = ui.mainViewport;
+  const center = viewport.getCentrePosition();
+  const size = getViewportSize();
+  
+  // Rough estimate (doesn't account for zoom/rotation)
+  const halfWidth = size.width / 2;
+  const halfHeight = size.height / 2;
+  
+  return Math.abs(x - center.x) < halfWidth &&
+         Math.abs(y - center.y) < halfHeight;
+}
+
+if (isPositionVisible(2048, 2048)) {
+  console.log('Position is visible in viewport');
+}
+```
+
+## Viewport Coordinate System
+
+<Note>
+**Map Coordinates**: Viewports use map coordinates where each tile is 32x32 units.
+To convert tile coordinates to map coordinates: `mapCoord = tileCoord * 32`
+</Note>
+
+```javascript
+// Convert tile coordinates to map coordinates
+function tileToMap(tileX, tileY) {
+  return {
+    x: tileX * 32,
+    y: tileY * 32
+  };
+}
+
+// Convert map coordinates to tile coordinates
+function mapToTile(mapX, mapY) {
+  return {
+    x: Math.floor(mapX / 32),
+    y: Math.floor(mapY / 32)
+  };
+}
+
+// Center viewport on tile
+function centerOnTile(tileX, tileY) {
+  const mapPos = tileToMap(tileX, tileY);
+  ui.mainViewport.scrollTo(mapPos);
+}
+
+centerOnTile(64, 64); // Center on tile (64, 64)
+```
+
+## Best Practices
+
+<Tip>
+**Smooth Movement**: Use `scrollTo()` for user-initiated camera movements to provide smooth transitions. Use `moveTo()` for instant positioning when needed.
+</Tip>
+
+<Warning>
+**Performance**: Avoid updating viewport position every tick. Update only when necessary or throttle updates.
+</Warning>
+
+```javascript
+// Good: Throttled updates
+let lastUpdate = 0;
+
+context.subscribe('interval.tick', () => {
+  const now = Date.now();
+  if (now - lastUpdate > 1000) { // Update max once per second
+    lastUpdate = now;
+    // Update viewport
+  }
+});
+```

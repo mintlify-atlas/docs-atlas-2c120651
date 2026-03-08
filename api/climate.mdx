@@ -1,0 +1,347 @@
+---
+title: Climate API
+description: Climate and weather control APIs for OpenRCT2
+---
+
+The `climate` object provides access to the park's climate type and weather conditions.
+
+## Properties
+
+<ResponseField name="type" type="ClimateType" readonly>
+  The climate of the park. Can be:
+  - `"coolAndWet"` - Cool and Wet climate
+  - `"warm"` - Warm climate
+  - `"hotAndDry"` - Hot and Dry climate
+  - `"cold"` - Cold climate
+  
+  ```javascript
+  console.log(`Climate: ${climate.type}`);
+  ```
+</ResponseField>
+
+<ResponseField name="current" type="WeatherState" readonly>
+  The current weather in the park.
+  ```javascript
+  console.log(`Weather: ${climate.current.weather}`);
+  console.log(`Temperature: ${climate.current.temperature}°C`);
+  ```
+</ResponseField>
+
+<ResponseField name="future" type="WeatherState" readonly>
+  The next weather the park will experience.
+  ```javascript
+  console.log(`Next weather: ${climate.future.weather}`);
+  console.log(`Next temp: ${climate.future.temperature}°C`);
+  ```
+</ResponseField>
+
+## Weather Types
+
+Weather can be one of the following types:
+- `"sunny"` - Clear sunny weather
+- `"partiallyCloudy"` - Partially cloudy
+- `"cloudy"` - Cloudy weather
+- `"rain"` - Light rain
+- `"heavyRain"` - Heavy rain
+- `"thunder"` - Thunderstorm
+- `"snow"` - Light snow
+- `"heavySnow"` - Heavy snow
+- `"blizzard"` - Blizzard conditions
+
+## WeatherState Object
+
+<ResponseField name="weather" type="WeatherType" readonly>
+  The weather type.
+</ResponseField>
+
+<ResponseField name="temperature" type="number" readonly>
+  The temperature in degrees Celsius.
+</ResponseField>
+
+```javascript
+const weather = climate.current;
+console.log(`${weather.weather} at ${weather.temperature}°C`);
+```
+
+## Usage Examples
+
+### Weather Monitor
+
+```javascript
+function monitorWeather() {
+  const current = climate.current;
+  const future = climate.future;
+  
+  console.log('=== Weather Report ===');
+  console.log(`Climate: ${climate.type}`);
+  console.log(`Current: ${current.weather} (${current.temperature}°C)`);
+  console.log(`Next: ${future.weather} (${future.temperature}°C)`);
+}
+
+// Monitor weather changes
+let lastWeather = climate.current.weather;
+
+context.subscribe('interval.tick', () => {
+  if (climate.current.weather !== lastWeather) {
+    lastWeather = climate.current.weather;
+    console.log(`Weather changed to: ${lastWeather}`);
+    monitorWeather();
+  }
+});
+```
+
+### Weather-Based Actions
+
+```javascript
+context.subscribe('interval.day', () => {
+  const weather = climate.current.weather;
+  
+  if (weather === 'rain' || weather === 'heavyRain' || weather === 'thunder') {
+    console.log('Rainy day - guests may want umbrellas!');
+    // Could adjust shop prices, spawn more umbrella vendors, etc.
+  }
+  
+  if (weather === 'sunny' && climate.current.temperature > 25) {
+    console.log('Hot sunny day - guests may want drinks!');
+    // Could adjust drink prices, promote water rides, etc.
+  }
+  
+  if (weather === 'snow' || weather === 'heavySnow' || weather === 'blizzard') {
+    console.log('Snowy day - winter wonderland!');
+  }
+});
+```
+
+### Temperature Comfort Checker
+
+```javascript
+function getComfortLevel() {
+  const temp = climate.current.temperature;
+  
+  if (temp < 0) return 'Freezing';
+  if (temp < 10) return 'Cold';
+  if (temp < 15) return 'Cool';
+  if (temp < 25) return 'Comfortable';
+  if (temp < 30) return 'Warm';
+  return 'Hot';
+}
+
+console.log(`Temperature comfort: ${getComfortLevel()}`);
+```
+
+### Weather Forecast
+
+```javascript
+function getWeatherForecast() {
+  const current = climate.current;
+  const future = climate.future;
+  
+  let forecast = `Currently ${current.weather} at ${current.temperature}°C. `;
+  
+  if (future.weather !== current.weather) {
+    forecast += `Expect ${future.weather} later.`;
+  } else {
+    forecast += 'Weather will remain the same.';
+  }
+  
+  const tempChange = future.temperature - current.temperature;
+  if (tempChange > 5) {
+    forecast += ' Temperature rising.';
+  } else if (tempChange < -5) {
+    forecast += ' Temperature dropping.';
+  }
+  
+  return forecast;
+}
+
+console.log(getWeatherForecast());
+```
+
+### Rain Detector
+
+```javascript
+function isRaining() {
+  const weather = climate.current.weather;
+  return weather === 'rain' || 
+         weather === 'heavyRain' || 
+         weather === 'thunder';
+}
+
+if (isRaining()) {
+  console.log('It\'s raining!');
+}
+```
+
+### Climate-Specific Messages
+
+```javascript
+function getClimateDescription() {
+  switch (climate.type) {
+    case 'coolAndWet':
+      return 'This park has a cool and wet climate. Expect frequent rain.';
+    case 'warm':
+      return 'This park has a warm climate. Pleasant weather most of the time.';
+    case 'hotAndDry':
+      return 'This park has a hot and dry climate. Plenty of sunshine!';
+    case 'cold':
+      return 'This park has a cold climate. Snow is common in winter.';
+    default:
+      return 'Unknown climate type.';
+  }
+}
+
+console.log(getClimateDescription());
+```
+
+### Weather Impact Analyzer
+
+```javascript
+function analyzeWeatherImpact() {
+  const weather = climate.current.weather;
+  const temp = climate.current.temperature;
+  
+  const impact = {
+    guestComfort: 'normal',
+    rideOperability: 'normal',
+    recommendations: []
+  };
+  
+  // Rain impact
+  if (weather === 'rain' || weather === 'heavyRain' || weather === 'thunder') {
+    impact.guestComfort = 'reduced';
+    impact.recommendations.push('Ensure covered areas are available');
+    impact.recommendations.push('Stock umbrellas in shops');
+  }
+  
+  // Extreme cold
+  if (temp < 5) {
+    impact.guestComfort = 'poor';
+    impact.recommendations.push('Promote indoor attractions');
+    impact.recommendations.push('Increase hot drink availability');
+  }
+  
+  // Extreme heat
+  if (temp > 30) {
+    impact.guestComfort = 'reduced';
+    impact.recommendations.push('Promote water rides');
+    impact.recommendations.push('Ensure drink stalls are well-stocked');
+  }
+  
+  // Snow/blizzard
+  if (weather === 'blizzard' || weather === 'heavySnow') {
+    impact.rideOperability = 'reduced';
+    impact.recommendations.push('Some outdoor rides may need to close');
+  }
+  
+  return impact;
+}
+
+const impact = analyzeWeatherImpact();
+console.log('Weather Impact:', impact);
+```
+
+### Seasonal Weather Tracker
+
+```javascript
+let weatherHistory = [];
+
+context.subscribe('interval.day', () => {
+  weatherHistory.push({
+    date: `${date.month}-${date.day}`,
+    weather: climate.current.weather,
+    temp: climate.current.temperature
+  });
+  
+  // Keep only last 30 days
+  if (weatherHistory.length > 30) {
+    weatherHistory.shift();
+  }
+});
+
+function getAverageTemperature() {
+  if (weatherHistory.length === 0) return 0;
+  
+  const sum = weatherHistory.reduce((acc, day) => acc + day.temp, 0);
+  return (sum / weatherHistory.length).toFixed(1);
+}
+
+function getMostCommonWeather() {
+  const counts = {};
+  weatherHistory.forEach(day => {
+    counts[day.weather] = (counts[day.weather] || 0) + 1;
+  });
+  
+  let maxCount = 0;
+  let mostCommon = '';
+  
+  for (const [weather, count] of Object.entries(counts)) {
+    if (count > maxCount) {
+      maxCount = count;
+      mostCommon = weather;
+    }
+  }
+  
+  return mostCommon;
+}
+
+console.log('Average temp (30 days):', getAverageTemperature());
+console.log('Most common weather:', getMostCommonWeather());
+```
+
+### Weather Alert System
+
+```javascript
+function checkWeatherAlerts() {
+  const current = climate.current;
+  const future = climate.future;
+  
+  // Severe weather alert
+  if (current.weather === 'thunder' || current.weather === 'blizzard') {
+    park.postMessage({
+      type: 'blank',
+      text: `WEATHER ALERT: ${current.weather} conditions!`
+    });
+  }
+  
+  // Temperature warnings
+  if (current.temperature > 35) {
+    console.log('ALERT: Extreme heat!');
+  } else if (current.temperature < -5) {
+    console.log('ALERT: Extreme cold!');
+  }
+  
+  // Forecast warnings
+  if (future.weather === 'thunder' && current.weather !== 'thunder') {
+    console.log('WARNING: Thunderstorm approaching!');
+  }
+}
+
+context.subscribe('interval.day', checkWeatherAlerts);
+```
+
+## Weather and Game Mechanics
+
+<Note>
+Weather affects guest behavior in OpenRCT2:
+- Guests are less happy in rain and will seek shelter
+- Guests may buy umbrellas in rainy weather
+- Very hot weather increases thirst
+- Cold weather reduces guest spawning
+</Note>
+
+```javascript
+// Adjust park operations based on weather
+function adjustForWeather() {
+  const weather = climate.current.weather;
+  
+  if (isRaining()) {
+    console.log('Rainy weather: Guests seeking shelter');
+    // Could increase food stall prices, reduce outdoor ride prices
+  }
+  
+  if (climate.current.temperature > 25) {
+    console.log('Hot weather: Guests want drinks and water rides');
+    // Could increase drink prices, promote water rides
+  }
+}
+```

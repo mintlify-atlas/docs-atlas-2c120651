@@ -1,0 +1,371 @@
+---
+title: Hot Reload
+description: Enable hot reload for rapid plugin development
+---
+
+The hot reload feature allows you to develop plugins rapidly by automatically reloading your script in real-time whenever you save your JavaScript file. This eliminates the need to restart the game or reload your park after making changes.
+
+## Enabling Hot Reload
+
+<Steps>
+  <Step title="Locate your config file">
+    Find your `config.ini` file in your OpenRCT2 user directory:
+    
+    - **Windows:** `C:\Users\YourName\Documents\OpenRCT2\config.ini`
+    - **Mac:** `/Users/YourName/Library/Application Support/OpenRCT2/config.ini`
+    - **Linux:** `$XDG_CONFIG_HOME/OpenRCT2/config.ini` or `$HOME/.config/OpenRCT2/config.ini`
+  </Step>
+
+  <Step title="Edit the configuration">
+    Open `config.ini` in a text editor and find the `[plugin]` section. If it doesn't exist, create it.
+    
+    Set `enable_hot_reloading` to `true`:
+
+    ```ini
+    [plugin]
+    enable_hot_reloading = true
+    ```
+  </Step>
+
+  <Step title="Save and restart OpenRCT2">
+    Save the `config.ini` file and restart OpenRCT2 for the change to take effect.
+  </Step>
+</Steps>
+
+## How Hot Reload Works
+
+When hot reload is enabled:
+
+1. OpenRCT2 monitors your plugin files for changes
+2. When you save a JavaScript file, the game detects the change
+3. The plugin is automatically reloaded without restarting the game
+4. Your changes take effect immediately
+
+<Note>
+Hot reload works best with plugins that create UI windows or subscribe to events. You can close and reopen custom windows to see your changes instantly.
+</Note>
+
+## Demo Video
+
+A demonstration of hot reload in action can be found on YouTube: [OpenRCT2 plugin hot-reload demo](https://www.youtube.com/watch?v=jmjWzEhmDjk)
+
+The video shows:
+- Writing code in Visual Studio Code
+- Saving the file
+- Seeing changes immediately reflected in OpenRCT2
+- Opening and closing custom windows to preview updates
+
+## Development Workflow
+
+With hot reload enabled, your development workflow becomes much faster:
+
+<Steps>
+  <Step title="Set up your environment">
+    - Enable hot reload in `config.ini`
+    - Open your park in OpenRCT2
+    - Open your plugin file in your code editor (VS Code recommended)
+  </Step>
+
+  <Step title="Make changes">
+    Edit your plugin code in your editor
+  </Step>
+
+  <Step title="Save and test">
+    Save the file (Ctrl+S / Cmd+S)
+    
+    The plugin automatically reloads in OpenRCT2
+  </Step>
+
+  <Step title="Repeat">
+    Continue making changes and saving - no need to restart!
+  </Step>
+</Steps>
+
+## Example: Developing a Custom Window
+
+Here's a typical workflow when developing a custom UI window:
+
+```js
+function main() {
+    if (typeof ui === 'undefined') return;
+    
+    ui.registerMenuItem('My Window', function() {
+        openMyWindow();
+    });
+}
+
+function openMyWindow() {
+    var window = ui.openWindow({
+        classification: 'my-window',
+        title: 'My Custom Window',
+        width: 200,
+        height: 100,
+        widgets: [
+            {
+                type: 'label',
+                x: 10,
+                y: 20,
+                width: 180,
+                height: 14,
+                text: 'Park cash: ' + park.cash
+            }
+        ]
+    });
+}
+
+registerPlugin({
+    name: 'Custom Window',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+**Development process with hot reload:**
+
+1. Open the window using the menu item
+2. Make changes to the window layout or content
+3. Save the file
+4. Close the window in OpenRCT2
+5. Reopen it from the menu
+6. See your changes instantly!
+
+## Best Practices
+
+### Clean Up Resources
+
+When your plugin is reloaded, the old instance is disposed. Make sure to clean up any resources:
+
+```js
+var subscriptions = [];
+
+function main() {
+    // Store subscriptions so they can be disposed
+    subscriptions.push(
+        context.subscribe('interval.day', function() {
+            console.log('Day elapsed');
+        })
+    );
+}
+
+// Clean up is handled automatically on reload
+```
+
+### Use Window Classifications
+
+Give your custom windows unique classifications to prevent duplicates:
+
+```js
+function openMyWindow() {
+    // Close existing window if open
+    var existing = ui.getWindow('my-unique-window');
+    if (existing) {
+        existing.close();
+    }
+    
+    var window = ui.openWindow({
+        classification: 'my-unique-window',
+        title: 'My Window',
+        // ...
+    });
+}
+```
+
+### Separate Development and Production
+
+You might want different behavior during development:
+
+```js
+var isDevelopment = context.configuration.get('my-plugin.development', false);
+
+function main() {
+    if (isDevelopment) {
+        console.log('Development mode - verbose logging enabled');
+    }
+    
+    // Rest of plugin code
+}
+```
+
+Set this in the console:
+```js
+context.configuration.set('my-plugin.development', true);
+```
+
+## Limitations
+
+### Syntax Errors
+
+If your plugin has syntax errors, hot reload will fail and an error will be logged to the console. Fix the syntax error and save again.
+
+### State Persistence
+
+When a plugin is reloaded:
+- All variables are reset
+- Event subscriptions are disposed and re-created
+- Windows remain open but need to be manually closed and reopened to see changes
+
+<Warning>
+Data stored in plugin variables will be lost on reload. Use `context.sharedStorage` or `context.getParkStorage()` to persist data across reloads.
+</Warning>
+
+### Persisting Data Across Reloads
+
+```js
+function main() {
+    var storage = context.getParkStorage();
+    
+    // Load saved state
+    var counter = storage.get('counter', 0);
+    console.log('Counter value:', counter);
+    
+    // Increment and save
+    counter++;
+    storage.set('counter', counter);
+    
+    // This counter persists across hot reloads!
+}
+```
+
+## TypeScript and Build Tools
+
+If you're using TypeScript or build tools, you can set up automatic compilation on file save:
+
+### TypeScript Watch Mode
+
+```bash
+tsc --watch --target ES5 my-plugin.ts
+```
+
+This watches your TypeScript file and automatically compiles to JavaScript when you save. Combined with OpenRCT2's hot reload, you get a complete live development environment.
+
+### Webpack Watch Mode
+
+If using webpack for bundling:
+
+```bash
+webpack --watch
+```
+
+### VS Code Task
+
+Create a `.vscode/tasks.json` file:
+
+```json
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Watch TypeScript",
+            "type": "shell",
+            "command": "tsc",
+            "args": ["--watch", "--target", "ES5"],
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
+        }
+    ]
+}
+```
+
+Then run the task with `Ctrl+Shift+B` (or `Cmd+Shift+B` on Mac).
+
+## Troubleshooting
+
+### Hot Reload Not Working
+
+1. **Check config.ini:** Ensure `enable_hot_reloading = true` under `[plugin]`
+2. **Restart OpenRCT2:** Config changes require a restart
+3. **Check file location:** Plugin must be in the `plugin` directory
+4. **Check file extension:** File must end with `.js`
+5. **Check console:** Look for error messages in the console
+
+### Changes Not Appearing
+
+1. **Close and reopen windows:** Custom windows need to be reopened to show changes
+2. **Check syntax:** Syntax errors prevent reloading
+3. **Check file saved:** Ensure you actually saved the file
+4. **Check build output:** If using TypeScript/webpack, ensure compilation succeeded
+
+### Multiple Reloads
+
+If the plugin reloads multiple times:
+- Your build tool might be writing the file multiple times
+- Try adding a small delay in your build process
+- Check that you don't have multiple watchers running
+
+## Complete Example
+
+Here's a complete example showing hot reload in action:
+
+```js
+var windowCounter = 0;
+
+function main() {
+    if (typeof ui === 'undefined') return;
+    
+    // Register menu item
+    ui.registerMenuItem('Counter Window', function() {
+        openCounterWindow();
+    });
+    
+    console.log('Counter plugin loaded (hot reload active)');
+}
+
+function openCounterWindow() {
+    // Get persisted counter value
+    var storage = context.getParkStorage();
+    var count = storage.get('counter', 0);
+    
+    var window = ui.openWindow({
+        classification: 'counter-window',
+        title: 'Counter Example',
+        width: 200,
+        height: 80,
+        widgets: [
+            {
+                type: 'label',
+                x: 10,
+                y: 20,
+                width: 180,
+                height: 14,
+                text: 'Count: ' + count
+            },
+            {
+                type: 'button',
+                x: 10,
+                y: 40,
+                width: 80,
+                height: 14,
+                text: 'Increment',
+                onClick: function() {
+                    count++;
+                    storage.set('counter', count);
+                    window.close();
+                    openCounterWindow(); // Reopen with new value
+                }
+            }
+        ]
+    });
+}
+
+registerPlugin({
+    name: 'Counter Example',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+With hot reload, you can:
+- Change the window layout and see it immediately
+- Modify button text or colors
+- Add new widgets
+- Change the counter logic
+
+All without restarting OpenRCT2!

@@ -1,0 +1,366 @@
+---
+title: OpenRCT2 Architecture
+description: Understanding the OpenRCT2 codebase structure and architecture
+---
+
+OpenRCT2 is an open-source re-implementation of RollerCoaster Tycoon 2, written primarily in C++. The codebase is organized into several modules that handle different aspects of the game engine.
+
+## Project Structure
+
+The OpenRCT2 source code is organized into the following main components:
+
+```
+src/
+├── openrct2/          # Core game engine
+├── openrct2-ui/       # User interface layer (SDL-based)
+├── openrct2-cli/      # Command-line interface
+├── openrct2-android/  # Android-specific code
+├── openrct2-win/      # Windows-specific code
+├── openrct2-data/     # Data management utilities
+├── openrct2-deps/     # Dependency management
+└── thirdparty/        # Third-party libraries
+```
+
+## Core Engine (`openrct2/`)
+
+The core engine contains the main game logic and is organized into the following modules:
+
+### Actions
+
+**Location**: `src/openrct2/actions/`
+
+Handles all player actions in the game using a command pattern. Actions are used for:
+- Ride construction and modification
+- Park management operations
+- Guest and staff interactions
+- Terrain modification
+
+Actions support both single-player and multiplayer scenarios, with proper validation and rollback capabilities.
+
+```cpp
+// Example: Actions are executed through the game command system
+// Located in: src/openrct2/actions/
+```
+
+### Audio
+
+**Location**: `src/openrct2/audio/`
+
+Manages sound effects and music playback:
+- Audio mixer and channels
+- Music track management
+- Sound effect triggering
+- Audio device abstraction
+
+### Command Line
+
+**Location**: `src/openrct2/command_line/`
+
+Provides command-line interface functionality for:
+- Headless server operation
+- Asset conversion utilities
+- Screenshot generation
+- Benchmarking tools
+
+### Configuration
+
+**Location**: `src/openrct2/config/`
+
+Handles game configuration and settings:
+- User preferences
+- Graphics settings
+- Audio settings
+- Keyboard shortcuts
+
+### Core
+
+**Location**: `src/openrct2/core/`
+
+Provides fundamental utilities and data structures:
+- String manipulation
+- File I/O operations
+- Memory management
+- Data structures (collections, containers)
+- Cryptographic functions
+
+<Note>
+The core module includes utilities like `String.hpp` for UTF-8 string handling and file system abstractions for cross-platform compatibility.
+</Note>
+
+### Drawing
+
+**Location**: `src/openrct2/drawing/`
+
+Handles 2D rendering and drawing operations:
+- Sprite rendering
+- Text rendering
+- Image manipulation
+- Drawing surfaces and contexts
+
+### Entity
+
+**Location**: `src/openrct2/entity/`
+
+Manages dynamic game entities:
+- Guests (peeps)
+- Staff members
+- Vehicles
+- Ducks and other effects
+
+### Interface
+
+**Location**: `src/openrct2/interface/`
+
+Provides the game's windowing system and UI framework:
+- Window management
+- Widget system
+- Input handling
+- Viewport management
+
+### Localisation
+
+**Location**: `src/openrct2/localisation/`
+
+Handles translation and localization:
+- String table management
+- Language loading
+- String ID definitions (`StringIds.h`)
+- Date and currency formatting
+
+### Network
+
+**Location**: `src/openrct2/network/`
+
+Implements multiplayer functionality:
+- Client-server architecture
+- Network synchronization
+- Player management
+- Chat system
+
+### Object
+
+**Location**: `src/openrct2/object/`
+
+Manages game objects (rides, scenery, etc.):
+- Object loading and parsing
+- Object repositories
+- Custom object support
+- DAT file parsing
+
+### Paint
+
+**Location**: `src/openrct2/paint/`
+
+Handles 3D rendering and painting:
+- Isometric rendering
+- Ride rendering
+- Scenery rendering
+- Paint session management
+
+<Info>
+The paint system is one of the most complex parts of OpenRCT2, responsible for converting 3D game world data into 2D isometric sprites.
+</Info>
+
+### Park
+
+**Location**: `src/openrct2/park/`
+
+Manages park-level data and operations:
+- Park rating and awards
+- Entrance management
+- Park statistics
+- Research and development
+
+### Peep
+
+**Location**: `src/openrct2/peep/`
+
+Implements guest and staff AI:
+- Guest behavior and pathfinding
+- Staff AI and tasks
+- Thought generation
+- Peep spawning
+
+### Platform
+
+**Location**: `src/openrct2/platform/`
+
+Provides platform-specific abstractions:
+- File system operations
+- Window management
+- Clipboard access
+- Platform detection
+
+### RCT1/RCT2 Compatibility
+
+**Locations**: 
+- `src/openrct2/rct1/`
+- `src/openrct2/rct2/`
+- `src/openrct2/rct12/`
+
+Handles importing and compatibility with original game formats:
+- Save game loading (SV4/SV6)
+- Scenario import
+- Data conversion
+- Track design import
+
+### Ride
+
+**Location**: `src/openrct2/ride/`
+
+Manages ride logic and mechanics:
+- Ride types and definitions
+- Station management
+- Vehicle physics
+- Track construction
+- Ride ratings calculation
+
+### Scenario
+
+**Location**: `src/openrct2/scenario/`
+
+Handles scenario and park management:
+- Scenario objectives
+- Park initialization
+- Scenario editor
+
+### Scripting
+
+**Location**: `src/openrct2/scripting/`
+
+Provides plugin scripting API:
+- JavaScript plugin support (Duktape)
+- Script engine management
+- Hook system for game events
+- API bindings for game functions
+
+```javascript
+// Plugins can extend OpenRCT2 with custom functionality
+// See: distribution/scripting.md for API documentation
+```
+
+### UI
+
+**Location**: `src/openrct2/ui/`
+
+Provides UI abstraction layer:
+- UI context management
+- Window system interface
+- Input management
+
+### Utility
+
+**Location**: `src/openrct2/util/`
+
+Provides various utility functions:
+- Math utilities
+- Compression utilities
+- Encoding/decoding
+
+## UI Layer (`openrct2-ui/`)
+
+The UI layer is built on SDL and provides the window system for the game. It includes:
+
+- **Windows**: All game windows (ride windows, guest windows, park management, etc.)
+- **Cursor handling**: Custom cursor rendering and repository
+- **Text input**: Text composition and input handling
+- **Platform integration**: Platform-specific UI code (Linux, Windows, Android)
+
+<Note>
+The UI layer is separated from the core engine to allow for potential alternative UI implementations in the future.
+</Note>
+
+## Third-Party Libraries
+
+**Location**: `src/thirdparty/`
+
+OpenRCT2 includes several third-party libraries:
+
+<CardGroup cols={2}>
+  <Card title="Duktape" icon="code">
+    JavaScript engine for plugin scripting
+  </Card>
+  
+  <Card title="dukglue" icon="link">
+    C++ binding library for Duktape
+  </Card>
+  
+  <Card title="SFL" icon="brackets-curly">
+    Small Fast Library - container implementations
+  </Card>
+  
+  <Card title="linenoise" icon="terminal">
+    Command-line editing library
+  </Card>
+</CardGroup>
+
+## Data Flow
+
+The typical data flow in OpenRCT2 follows this pattern:
+
+```
+User Input → UI Layer → Actions → Game State → Paint System → Rendering
+                ↓                      ↓
+            Network (Multiplayer)   Audio System
+```
+
+### Game Loop
+
+1. **Input Processing**: User input is captured by the UI layer
+2. **Action Execution**: Input is converted to actions and validated
+3. **State Update**: Game state is updated based on actions
+4. **AI Processing**: Guest and staff AI logic executes
+5. **Rendering**: Paint system renders the updated state
+6. **Audio**: Sound effects and music are played
+
+## Key Design Patterns
+
+### Command Pattern
+
+All game-modifying operations use the command/action pattern for:
+- Network synchronization in multiplayer
+- Undo/redo functionality (future)
+- Validation and error handling
+
+### Entity-Component System
+
+Entities (guests, staff, vehicles) use a component-based approach for flexible behavior composition.
+
+### Paint Sessions
+
+Rendering uses paint sessions to collect and sort draw calls before rendering, allowing for proper depth sorting in isometric view.
+
+## Building Blocks
+
+### Tile Elements
+
+The game world is composed of tiles, each containing multiple tile elements:
+- Surface elements (terrain)
+- Path elements
+- Track elements
+- Scenery elements
+- Entrance elements
+- Walls
+- Banners
+
+See the [Save Format](/development/save-format) documentation for detailed tile element structure.
+
+## Further Reading
+
+<CardGroup cols={2}>
+  <Card title="Contributing Guide" icon="code-pull-request" href="/development/contributing">
+    Learn how to contribute code to OpenRCT2
+  </Card>
+  
+  <Card title="Save Format" icon="file" href="/development/save-format">
+    Understanding the save file format
+  </Card>
+  
+  <Card title="Plugin API" icon="plug" href="https://github.com/OpenRCT2/OpenRCT2/blob/develop/distribution/scripting.md">
+    Scripting API documentation
+  </Card>
+  
+  <Card title="Coding Style" icon="paintbrush" href="https://github.com/OpenRCT2/OpenRCT2/wiki/Coding-Style">
+    Code style guidelines
+  </Card>
+</CardGroup>

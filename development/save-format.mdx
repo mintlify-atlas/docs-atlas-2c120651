@@ -1,0 +1,744 @@
+---
+title: Save File Format
+description: Technical specification of the OpenRCT2 save file format
+---
+
+OpenRCT2 uses a chunk-based save file format that supports compression and versioning. This document describes the structure of save files.
+
+<Note>
+All strings in save files are null-terminated UTF-8.
+</Note>
+
+## Data Types
+
+### Array32
+
+Variable-length array with 32-bit metadata:
+
+<ParamField path="length" type="uint32">
+  Number of elements in the array
+</ParamField>
+
+<ParamField path="element-size" type="uint32">
+  Size of each element in bytes. A value of 0 indicates varying size (e.g., for strings)
+</ParamField>
+
+<ParamField path="data" type="blob">
+  Raw array data
+</ParamField>
+
+### String Table
+
+Localized string container:
+
+<ParamField path="lcode" type="string">
+  Language code (e.g., "en-GB", "de-DE")
+</ParamField>
+
+<ParamField path="value" type="string">
+  Translated string value
+</ParamField>
+
+## File Structure
+
+### Header
+
+The file begins with a header containing metadata:
+
+<ParamField path="magic" type="uint32">
+  Magic number identifying the file format
+</ParamField>
+
+<ParamField path="target-version" type="uint32">
+  Target version of OpenRCT2 for this save file
+</ParamField>
+
+<ParamField path="min-version" type="uint32">
+  Minimum OpenRCT2 version required to load this file
+</ParamField>
+
+<ParamField path="num-chunks" type="uint32">
+  Number of data chunks in the file
+</ParamField>
+
+<ParamField path="uncompressed-size" type="uint64">
+  Total size of uncompressed data
+</ParamField>
+
+<ParamField path="compression" type="uint32">
+  Compression algorithm used (0 = none, 1 = gzip, etc.)
+</ParamField>
+
+<ParamField path="sha1" type="byte[20]">
+  SHA-1 hash of the uncompressed data for integrity verification
+</ParamField>
+
+### Chunk Index
+
+Following the header is an index of all chunks:
+
+<ParamField path="id" type="uint32">
+  Chunk type identifier
+</ParamField>
+
+<ParamField path="offset" type="uint64">
+  Byte offset from start of file to chunk data
+</ParamField>
+
+<ParamField path="length" type="uint64">
+  Length of chunk data in bytes
+</ParamField>
+
+## Chunk Types
+
+### Authoring
+
+Metadata about who created the save file:
+
+<ParamField path="engine" type="string">
+  Engine version string (e.g., "openrct2 v0.1.2 (Linux)")
+</ParamField>
+
+<ParamField path="authors" type="string[]">
+  List of author names
+</ParamField>
+
+<ParamField path="notes" type="string">
+  Custom notes or description
+</ParamField>
+
+<ParamField path="date-started" type="timestamp">
+  When the park was first created
+</ParamField>
+
+<ParamField path="date-modified" type="timestamp">
+  When the save was last modified
+</ParamField>
+
+### Objects
+
+List of custom objects used in the park:
+
+<ParamField path="type" type="uint16">
+  Object type (ride, scenery, etc.)
+</ParamField>
+
+<ParamField path="id" type="string">
+  Unique object identifier
+</ParamField>
+
+<ParamField path="version" type="string">
+  Object version string
+</ParamField>
+
+### Scenario
+
+Scenario information and objectives:
+
+<ParamField path="category" type="uint32">
+  Scenario category (beginner, challenging, expert, etc.)
+</ParamField>
+
+<ParamField path="name" type="string-table">
+  Localized scenario name
+</ParamField>
+
+<ParamField path="park-name" type="string-table">
+  Localized park name
+</ParamField>
+
+<ParamField path="details" type="string-table">
+  Localized scenario description
+</ParamField>
+
+<ParamField path="objective-type" type="uint32">
+  Type of objective (guest count, park rating, etc.)
+</ParamField>
+
+<ParamField path="objective-year" type="uint16">
+  Year by which objective must be completed
+</ParamField>
+
+<ParamField path="objective-guests" type="uint32">
+  Target number of guests (for guest count objective)
+</ParamField>
+
+<ParamField path="objective-rating" type="uint16">
+  Target park rating
+</ParamField>
+
+<ParamField path="objective-ride-excitement" type="uint16">
+  Minimum ride excitement rating required
+</ParamField>
+
+<ParamField path="objective-ride-length" type="uint16">
+  Minimum ride length required
+</ParamField>
+
+<ParamField path="objective-park-value" type="money32">
+  Target park value
+</ParamField>
+
+<ParamField path="objective-ride-profit" type="money32">
+  Target profit from rides
+</ParamField>
+
+<ParamField path="objective-shop-profit" type="money32">
+  Target profit from shops
+</ParamField>
+
+<ParamField path="completed-company-value" type="money32">
+  Company value when objective was completed
+</ParamField>
+
+<ParamField path="completed-name" type="string">
+  Name recorded when objective was completed
+</ParamField>
+
+### General
+
+General game state:
+
+<ParamField path="ticks" type="uint32">
+  Game ticks elapsed since park opened
+</ParamField>
+
+<ParamField path="elapsed-months" type="uint32">
+  Number of months elapsed in-game
+</ParamField>
+
+<ParamField path="current-day" type="uint16">
+  Current day of the month (0-based)
+</ParamField>
+
+<ParamField path="rand" type="uint32[2]">
+  Random number generator state (two 32-bit values)
+</ParamField>
+
+<ParamField path="initial-cash" type="money32">
+  Starting cash amount
+</ParamField>
+
+<ParamField path="guest-initial-cash" type="money16">
+  Amount of cash guests spawn with
+</ParamField>
+
+<ParamField path="guest-initial-hunger" type="uint8">
+  Initial hunger level for new guests (0-255)
+</ParamField>
+
+<ParamField path="guest-initial-thirst" type="uint8">
+  Initial thirst level for new guests (0-255)
+</ParamField>
+
+<ParamField path="guest-spawns" type="xyzd32">
+  Guest spawn point coordinates and direction
+</ParamField>
+
+<ParamField path="land-price" type="money32">
+  Cost per tile to purchase land
+</ParamField>
+
+<ParamField path="construction-rights-price" type="money32">
+  Cost per tile to purchase construction rights
+</ParamField>
+
+### Interface
+
+Interface state (viewport position, last selections):
+
+<ParamField path="main-viewport.x" type="uint16">
+  Viewport X coordinate
+</ParamField>
+
+<ParamField path="main-viewport.y" type="uint16">
+  Viewport Y coordinate
+</ParamField>
+
+<ParamField path="main-viewport.zoom" type="uint8">
+  Viewport zoom level (0 = closest, higher = further)
+</ParamField>
+
+<ParamField path="main-viewport.rotation" type="uint8">
+  Viewport rotation (0-3)
+</ParamField>
+
+<ParamField path="last-entrance-style" type="uint32">
+  Last selected entrance style
+</ParamField>
+
+### Climate
+
+Weather and climate information:
+
+<ParamField path="climate" type="uint8">
+  Climate type (cool & wet, warm, hot & dry, etc.)
+</ParamField>
+
+<ParamField path="climate-update-timer" type="uint16">
+  Timer for next climate update
+</ParamField>
+
+<ParamField path="current.weather" type="uint8">
+  Current weather condition
+</ParamField>
+
+<ParamField path="current.temperature" type="uint8">
+  Current temperature
+</ParamField>
+
+<ParamField path="current.effect" type="uint8">
+  Current weather effect
+</ParamField>
+
+<ParamField path="current.gloom" type="uint8">
+  Current gloominess level
+</ParamField>
+
+<ParamField path="current.rain-level" type="uint8">
+  Current rain intensity
+</ParamField>
+
+<Note>
+The `next` weather state has the same structure as `current` and is used for smooth weather transitions.
+</Note>
+
+### Park
+
+Park management data:
+
+<ParamField path="name" type="string-id">
+  Park name (string ID reference)
+</ParamField>
+
+<ParamField path="cash" type="money32">
+  Current cash balance
+</ParamField>
+
+<ParamField path="loan" type="money32">
+  Current loan amount
+</ParamField>
+
+<ParamField path="loan-max" type="money32">
+  Maximum loan available
+</ParamField>
+
+<ParamField path="interest" type="uint16">
+  Interest rate on loan (basis points)
+</ParamField>
+
+<ParamField path="flags" type="uint64">
+  Park flags (open/closed, forbid marketing, etc.)
+</ParamField>
+
+<ParamField path="entrance-fee" type="money32">
+  Park entrance fee
+</ParamField>
+
+<ParamField path="rating" type="uint16">
+  Current park rating (0-999)
+</ParamField>
+
+<ParamField path="rating-casualty-penalty" type="uint16">
+  Penalty applied to rating from casualties
+</ParamField>
+
+<ParamField path="current-expenditure" type="money32">
+  Expenditure in current period
+</ParamField>
+
+<ParamField path="current-profit" type="money32">
+  Profit in current period
+</ParamField>
+
+<ParamField path="total-admissions" type="uint32">
+  Total number of guests who have entered the park
+</ParamField>
+
+<ParamField path="income-from-admissions" type="money32">
+  Total revenue from entrance fees
+</ParamField>
+
+<ParamField path="handyman-colour" type="uint8">
+  Uniform color for handymen
+</ParamField>
+
+<ParamField path="mechanic-colour" type="uint8">
+  Uniform color for mechanics
+</ParamField>
+
+<ParamField path="security-colour" type="uint8">
+  Uniform color for security guards
+</ParamField>
+
+<ParamField path="campaigns.weeks-left" type="uint16">
+  Weeks remaining for active marketing campaigns
+</ParamField>
+
+<ParamField path="campaigns.ride-index" type="uint32">
+  Ride being marketed in campaign
+</ParamField>
+
+<ParamField path="research-funding" type="uint8">
+  Research funding level (0-3)
+</ParamField>
+
+<ParamField path="research-enabled" type="uint32">
+  Bitfield of enabled research categories
+</ParamField>
+
+<ParamField path="research-progress-stage" type="uint8">
+  Current research stage
+</ParamField>
+
+<ParamField path="research-progress" type="uint16">
+  Research progress toward next item
+</ParamField>
+
+<ParamField path="research-last-item" type="uint32">
+  Last item researched
+</ParamField>
+
+<ParamField path="research-next-item" type="uint32">
+  Next item to be researched
+</ParamField>
+
+<ParamField path="rating-warning-days" type="uint16">
+  Days until park rating warning expires
+</ParamField>
+
+<ParamField path="peep-warning-throttle" type="uint8[16]">
+  Throttle timers for various peep warnings
+</ParamField>
+
+### History
+
+Historical data for charts:
+
+<ParamField path="rating-history" type="uint16[]">
+  Park rating history by period
+</ParamField>
+
+<ParamField path="guests-history" type="uint32[]">
+  Guest count history by period
+</ParamField>
+
+<ParamField path="cash-history" type="money32[]">
+  Cash balance history by period
+</ParamField>
+
+<ParamField path="weekly-profit-history" type="money32[]">
+  Weekly profit history
+</ParamField>
+
+<ParamField path="park-value-history" type="money32[]">
+  Park value history by period
+</ParamField>
+
+<ParamField path="expenditure-history" type="money32[][]">
+  Expenditure history by category and period
+</ParamField>
+
+### Tiles
+
+Map tile data:
+
+<ParamField path="map-size" type="xy32">
+  Map dimensions (width and height in tiles)
+</ParamField>
+
+<ParamField path="tile-elements" type="tile-element[]">
+  Array of all tile elements (see [Tile Elements](#tile-elements))
+</ParamField>
+
+### Other Chunks
+
+Additional chunk types include:
+- **Inventions**: Research/invention progress
+- **Things**: Dynamic entities (guests, staff, vehicles)
+- **Rides**: Ride data and statistics
+- **Banners**: Banner text and configuration
+- **Animations**: Active animations
+- **Staff**: Staff member data
+- **Strings**: Custom string table
+- **Editor**: Editor state (if in scenario editor)
+- **Derived**: Calculated values (park size, company value)
+
+## Tile Elements
+
+### Base Element
+
+All tile elements share a common base structure:
+
+<ParamField path="type" type="uint8">
+  Element type (surface, path, track, scenery, wall, entrance, banner)
+</ParamField>
+
+<ParamField path="flags" type="uint8">
+  Element flags (ghost, last tile, etc.)
+</ParamField>
+
+<ParamField path="base-z" type="uint8">
+  Base height of element (in units of 8)
+</ParamField>
+
+<ParamField path="clear-z" type="uint8">
+  Clearance height (highest point of element)
+</ParamField>
+
+### Surface Element
+
+Terrain tile:
+
+<ParamField path="slope" type="uint8">
+  Terrain slope/shape
+</ParamField>
+
+<ParamField path="water-height" type="uint8">
+  Water surface height (0 if no water)
+</ParamField>
+
+<ParamField path="ownership" type="uint8">
+  Land ownership flags
+</ParamField>
+
+<ParamField path="grass-length" type="uint8">
+  Grass length (for grass surfaces)
+</ParamField>
+
+<ParamField path="surface-object-id" type="uint8">
+  Surface terrain type object
+</ParamField>
+
+<ParamField path="edge-object-id" type="uint8">
+  Edge terrain type object
+</ParamField>
+
+### Footpath Element
+
+Path/queue tile:
+
+<ParamField path="object-id" type="uint16">
+  Footpath object type
+</ParamField>
+
+<ParamField path="edges" type="uint8">
+  Bitfield of connected edges
+</ParamField>
+
+<ParamField path="flags2" type="uint8">
+  Additional path flags (is queue, is sloped, etc.)
+</ParamField>
+
+<ParamField path="addition" type="uint16">
+  Path addition object (lamp, bin, etc.)
+</ParamField>
+
+<ParamField path="addition-status" type="uint8">
+  Addition state (broken, vandalised, etc.)
+</ParamField>
+
+<ParamField path="station-index" type="uint8">
+  Station index (if queue path)
+</ParamField>
+
+<ParamField path="ride-index" type="uint32">
+  Ride index (if queue path)
+</ParamField>
+
+### Track Element
+
+Ride track piece:
+
+<ParamField path="type" type="uint16">
+  Track piece type (flat, 25° up, brakes, etc.)
+</ParamField>
+
+<ParamField path="sequence" type="uint8">
+  Sequence number within multi-tile track piece
+</ParamField>
+
+<ParamField path="style" type="uint8">
+  Track style (wooden, steel, inverted, etc.)
+</ParamField>
+
+<ParamField path="station-index" type="uint8">
+  Station index (if station piece)
+</ParamField>
+
+<ParamField path="colour" type="uint8">
+  Track color scheme
+</ParamField>
+
+<ParamField path="flags" type="uint8">
+  Track flags (is station, on-ride photo, etc.)
+</ParamField>
+
+### Track Element (Maze)
+
+Maze ride has a different structure:
+
+<ParamField path="type" type="uint16">
+  Track type (always maze)
+</ParamField>
+
+<ParamField path="maze-entry" type="uint16">
+  Bitfield of maze walls and entry points
+</ParamField>
+
+### Entrance Element
+
+Ride or park entrance:
+
+<ParamField path="object-id" type="uint16">
+  Entrance object type
+</ParamField>
+
+<ParamField path="footpath-object-id" type="uint16">
+  Associated footpath type
+</ParamField>
+
+<ParamField path="ride-index" type="uint32">
+  Ride index (0xFFFFFFFF for park entrance)
+</ParamField>
+
+<ParamField path="station-index" type="uint8">
+  Station index
+</ParamField>
+
+<ParamField path="type" type="uint8">
+  Entrance part (front, middle, back)
+</ParamField>
+
+### Scenery Element
+
+Small scenery item:
+
+<ParamField path="object-id" type="uint32">
+  Scenery object ID
+</ParamField>
+
+<ParamField path="age" type="uint8">
+  Scenery age (for aging/withering)
+</ParamField>
+
+<ParamField path="colours" type="uint8[2]">
+  Primary and secondary colors
+</ParamField>
+
+### Large Scenery Element
+
+Large scenery structure:
+
+<ParamField path="object-id" type="uint32">
+  Large scenery object ID
+</ParamField>
+
+<ParamField path="colour" type="uint8[3]">
+  Three color values
+</ParamField>
+
+### Wall Element
+
+Wall/fence piece:
+
+<ParamField path="object-id" type="uint32">
+  Wall object ID
+</ParamField>
+
+<ParamField path="colours" type="uint8[3]">
+  Three color values
+</ParamField>
+
+<ParamField path="animation" type="uint8">
+  Animation frame (for animated walls)
+</ParamField>
+
+<ParamField path="banner-index" type="uint32">
+  Associated banner index (if wall has banner)
+</ParamField>
+
+### Banner Element
+
+Banner (sign):
+
+<ParamField path="object-id" type="uint16">
+  Banner object type
+</ParamField>
+
+<ParamField path="index" type="uint32">
+  Banner index (references banner text in Strings chunk)
+</ParamField>
+
+<ParamField path="flags" type="uint8">
+  Banner flags
+</ParamField>
+
+<ParamField path="position" type="uint8">
+  Position on tile edge
+</ParamField>
+
+## Index Limits
+
+Maximum values for various indices:
+
+<CodeGroup>
+```text Entity Indices
+Ride index:          uint32 (4,294,967,295)
+Banner index:        uint32 (4,294,967,295)
+Station index:       uint8  (255)
+```
+
+```text Object Indices
+Ride object:         uint16 (65,535)
+Terrain surface:     uint8  (255)
+Terrain edge:        uint8  (255)
+Entrance:            uint16 (65,535)
+Footpath:            uint16 (65,535)
+Footpath addition:   uint16 (65,535)
+Scenery:             uint32 (4,294,967,295)
+Large scenery:       uint32 (4,294,967,295)
+Wall:                uint32 (4,294,967,295)
+Banner:              uint16 (65,535)
+```
+</CodeGroup>
+
+<Warning>
+These are theoretical limits. Practical limits may be lower due to performance considerations and memory constraints.
+</Warning>
+
+## Working with Save Files
+
+### Loading
+
+1. Read and validate header
+2. Verify SHA-1 hash
+3. Decompress data if compressed
+4. Read chunk index
+5. Load chunks in dependency order
+6. Validate cross-references
+
+### Saving
+
+1. Collect all game state
+2. Write chunks
+3. Build chunk index
+4. Compress data (optional)
+5. Calculate SHA-1 hash
+6. Write header
+
+<Info>
+OpenRCT2 supports both uncompressed and compressed save files. Compression significantly reduces file size but increases save/load time.
+</Info>
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="/development/architecture">
+    Learn about OpenRCT2's codebase structure
+  </Card>
+  
+  <Card title="Contributing" icon="code-pull-request" href="/development/contributing">
+    Contribute to OpenRCT2 development
+  </Card>
+</CardGroup>

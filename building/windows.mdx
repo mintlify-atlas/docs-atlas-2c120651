@@ -1,0 +1,411 @@
+---
+title: Building on Windows
+description: Step-by-step guide to building OpenRCT2 on Windows
+---
+
+This guide covers building OpenRCT2 from source on Windows using Visual Studio and vcpkg.
+
+## Prerequisites
+
+### Required Software
+
+- **Windows 7** or later (Windows 10/11 recommended)
+- **Visual Studio 2022** or later with:
+  - Desktop development with C++ workload
+  - Windows 10/11 SDK
+- **CMake** 3.24 or later
+- **Git** for Windows
+- **vcpkg** (for dependencies)
+
+### Installing Visual Studio
+
+1. Download [Visual Studio 2022 Community](https://visualstudio.microsoft.com/downloads/) (free)
+2. During installation, select **"Desktop development with C++"** workload
+3. Ensure the Windows SDK is included
+
+### Installing CMake
+
+<CodeGroup>
+
+```powershell Chocolatey
+choco install cmake
+```
+
+```powershell Scoop
+scoop install cmake
+```
+
+```text Manual
+Download from https://cmake.org/download/
+Add to PATH during installation
+```
+
+</CodeGroup>
+
+### Installing Git
+
+<CodeGroup>
+
+```powershell Chocolatey
+choco install git
+```
+
+```powershell Scoop
+scoop install git
+```
+
+```text Manual
+Download from https://git-scm.com/download/win
+```
+
+</CodeGroup>
+
+## Installing vcpkg
+
+vcpkg is the recommended way to manage dependencies on Windows.
+
+<Steps>
+  <Step title="Clone vcpkg">
+    Open PowerShell or Command Prompt:
+    
+    ```powershell
+    cd C:\
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ```
+  </Step>
+
+  <Step title="Bootstrap vcpkg">
+    ```powershell
+    .\bootstrap-vcpkg.bat
+    ```
+  </Step>
+
+  <Step title="Integrate with Visual Studio">
+    ```powershell
+    .\vcpkg integrate install
+    ```
+    
+    This makes vcpkg packages available to all Visual Studio projects.
+  </Step>
+
+  <Step title="Install OpenRCT2 dependencies">
+    For 64-bit build:
+    
+    ```powershell
+    .\vcpkg install sdl2:x64-windows libzip:x64-windows libpng:x64-windows zlib:x64-windows freetype:x64-windows icu:x64-windows zstd:x64-windows
+    ```
+    
+    For 32-bit build:
+    
+    ```powershell
+    .\vcpkg install sdl2:x86-windows libzip:x86-windows libpng:x86-windows zlib:x86-windows freetype:x86-windows icu:x86-windows zstd:x64-windows
+    ```
+    
+    Optional dependencies:
+    
+    ```powershell
+    .\vcpkg install flac:x64-windows libvorbis:x64-windows libogg:x64-windows
+    ```
+  </Step>
+</Steps>
+
+## Building OpenRCT2
+
+<Steps>
+  <Step title="Clone the repository">
+    ```powershell
+    git clone https://github.com/OpenRCT2/OpenRCT2.git
+    cd OpenRCT2
+    ```
+  </Step>
+
+  <Step title="Create a build directory">
+    ```powershell
+    mkdir build
+    cd build
+    ```
+    
+    <Warning>
+      Do not build in the source directory. CMake will reject in-source builds.
+    </Warning>
+  </Step>
+
+  <Step title="Configure with CMake">
+    Using vcpkg toolchain:
+    
+    ```powershell
+    cmake .. -G "Visual Studio 17 2022" -A x64 `
+      -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+    ```
+    
+    For 32-bit:
+    
+    ```powershell
+    cmake .. -G "Visual Studio 17 2022" -A Win32 `
+      -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+    ```
+    
+    <Info>
+      Replace `C:/vcpkg` with your actual vcpkg installation path.
+    </Info>
+  </Step>
+
+  <Step title="Build">
+    Using CMake:
+    
+    ```powershell
+    cmake --build . --config Release
+    ```
+    
+    Or open `OpenRCT2.sln` in Visual Studio and build from the IDE.
+  </Step>
+
+  <Step title="Locate binaries">
+    Built executables will be in:
+    
+    ```
+    build\Release\openrct2.exe
+    build\Release\openrct2.com
+    build\Release\openrct2-cli.exe
+    ```
+  </Step>
+</Steps>
+
+## Build Configurations
+
+### Release Build
+
+Optimized for performance:
+
+```powershell
+cmake --build . --config Release
+```
+
+### Debug Build
+
+With debugging symbols:
+
+```powershell
+cmake --build . --config Debug
+```
+
+### RelWithDebInfo Build
+
+Optimized with debug info:
+
+```powershell
+cmake --build . --config RelWithDebInfo
+```
+
+## Build Options
+
+### Headless Build (Server Only)
+
+```powershell
+cmake .. -G "Visual Studio 17 2022" -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DDISABLE_GUI=ON
+```
+
+### Disabling Features
+
+```powershell
+cmake .. -G "Visual Studio 17 2022" -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DDISABLE_OPENGL=ON `
+  -DDISABLE_HTTP=ON `
+  -DDISABLE_NETWORK=ON
+```
+
+### Building with Tests
+
+```powershell
+cmake .. -G "Visual Studio 17 2022" -A x64 `
+  -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+  -DWITH_TESTS=ON
+
+cmake --build . --config Debug
+
+# Run tests
+ctest -C Debug --output-on-failure
+```
+
+## Running OpenRCT2
+
+After building, run from the build directory:
+
+```powershell
+.\Release\openrct2.exe
+```
+
+For console output:
+
+```powershell
+.\Release\openrct2.com
+```
+
+For headless server:
+
+```powershell
+.\Release\openrct2-cli.exe host savegame.sv6
+```
+
+<Info>
+  On first run, OpenRCT2 will search for RollerCoaster Tycoon 2 in common installation directories or ask you to locate it.
+</Info>
+
+## Creating a Portable Build
+
+To create a portable installation:
+
+<Steps>
+  <Step title="Build in Release mode">
+    ```powershell
+    cmake --build . --config Release
+    ```
+  </Step>
+
+  <Step title="Create distribution folder">
+    ```powershell
+    mkdir dist
+    ```
+  </Step>
+
+  <Step title="Copy binaries and DLLs">
+    ```powershell
+    copy Release\openrct2.exe dist\
+    copy Release\openrct2.com dist\
+    copy Release\*.dll dist\
+    ```
+  </Step>
+
+  <Step title="Copy data files">
+    ```powershell
+    xcopy /E /I ..\data dist\data
+    ```
+  </Step>
+
+  <Step title="Copy generated assets">
+    ```powershell
+    copy Release\g2.dat dist\data\
+    copy Release\fonts.dat dist\data\
+    copy Release\palettes.dat dist\data\
+    copy Release\tracks.dat dist\data\
+    ```
+  </Step>
+</Steps>
+
+## Using Ninja (Alternative)
+
+For faster builds, use Ninja instead of MSBuild:
+
+<Steps>
+  <Step title="Install Ninja">
+    ```powershell
+    choco install ninja
+    # or
+    scoop install ninja
+    ```
+  </Step>
+
+  <Step title="Open Visual Studio Developer Command Prompt">
+    Search for "x64 Native Tools Command Prompt for VS 2022" in Start Menu
+  </Step>
+
+  <Step title="Configure with Ninja">
+    ```cmd
+    cmake .. -G Ninja ^
+      -DCMAKE_BUILD_TYPE=Release ^
+      -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+    ```
+  </Step>
+
+  <Step title="Build">
+    ```cmd
+    ninja
+    ```
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### CMake cannot find vcpkg packages
+
+Ensure you're using the vcpkg toolchain file:
+
+```powershell
+-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+
+Verify vcpkg integration:
+
+```powershell
+cd C:\vcpkg
+.\vcpkg integrate install
+```
+
+### Missing DLLs when running
+
+Copy DLLs from vcpkg to your build directory:
+
+```powershell
+# For Release builds
+copy C:\vcpkg\installed\x64-windows\bin\*.dll .\Release\
+
+# For Debug builds
+copy C:\vcpkg\installed\x64-windows\debug\bin\*.dll .\Debug\
+```
+
+Or run from Visual Studio, which handles this automatically.
+
+### "Building in-source is not supported" error
+
+<Warning>
+  Delete `CMakeCache.txt` and `CMakeFiles/` from the source directory, then create a separate build directory.
+</Warning>
+
+```powershell
+cd OpenRCT2
+rm -r CMakeCache.txt, CMakeFiles
+mkdir build
+cd build
+```
+
+### Visual Studio version mismatch
+
+For Visual Studio 2022:
+
+```powershell
+cmake .. -G "Visual Studio 17 2022"
+```
+
+For Visual Studio 2019:
+
+```powershell
+cmake .. -G "Visual Studio 16 2019"
+```
+
+### Windows SDK not found
+
+Install the Windows SDK through Visual Studio Installer:
+
+1. Open Visual Studio Installer
+2. Click "Modify" on your Visual Studio installation
+3. Under "Individual components", search for "Windows SDK"
+4. Select the latest Windows 10 or 11 SDK
+5. Click "Modify" to install
+
+### Out of memory errors during build
+
+Limit parallel builds:
+
+```powershell
+cmake --build . --config Release -- /maxcpucount:2
+```
+
+## Next Steps
+
+- [Building on WSL](/building/wsl) - Alternative method using Windows Subsystem for Linux
+- [Building with MSYS2](/building/msys2) - Alternative using MinGW compiler
+- [Contributing](/development/contributing) - Guidelines for contributing code

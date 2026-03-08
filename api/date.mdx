@@ -1,0 +1,309 @@
+---
+title: Date API
+description: In-game date and time APIs for OpenRCT2
+---
+
+The `date` object provides access to the in-game date and time, allowing you to track elapsed time and current date.
+
+## Properties
+
+<ResponseField name="ticksElapsed" type="number" readonly>
+  The total number of ticks that have elapsed since the beginning of the game/scenario.
+  This should never reset.
+  ```javascript
+  console.log(`Ticks elapsed: ${date.ticksElapsed}`);
+  ```
+</ResponseField>
+
+<ResponseField name="monthsElapsed" type="number">
+  The total number of months that have elapsed.
+  This equates to 0 in March, Year 1 and increases by 1 every month (8 times per year).
+  
+  <Note>
+  This represents the current date and may be reset by cheats or scripts.
+  </Note>
+  
+  ```javascript
+  console.log(`Months elapsed: ${date.monthsElapsed}`);
+  date.monthsElapsed = 24; // Jump to year 4
+  ```
+</ResponseField>
+
+<ResponseField name="yearsElapsed" type="number" readonly>
+  The total number of years that have elapsed.
+  Always equals `monthsElapsed / 8`.
+  ```javascript
+  console.log(`Years elapsed: ${date.yearsElapsed}`);
+  ```
+</ResponseField>
+
+<ResponseField name="monthProgress" type="number">
+  How far through the month we are, between 0 and 65535.
+  This is incremented by 4 each tick, so every month takes ~6.8 minutes to complete, making a year take just under an hour.
+  ```javascript
+  const progress = (date.monthProgress / 65535 * 100).toFixed(1);
+  console.log(`Month progress: ${progress}%`);
+  ```
+</ResponseField>
+
+<ResponseField name="day" type="number" readonly>
+  The day of the month from 1 to 31.
+  ```javascript
+  console.log(`Day: ${date.day}`);
+  ```
+</ResponseField>
+
+<ResponseField name="month" type="number" readonly>
+  The current month of the year from 0 to 7, where:
+  - 0 = March
+  - 1 = April
+  - 2 = May
+  - 3 = June
+  - 4 = July
+  - 5 = August
+  - 6 = September
+  - 7 = October
+  
+  ```javascript
+  const monthNames = ['March', 'April', 'May', 'June', 'July', 'August', 'September', 'October'];
+  console.log(`Month: ${monthNames[date.month]}`);
+  ```
+</ResponseField>
+
+<ResponseField name="year" type="number" readonly>
+  The current year starting from 1.
+  ```javascript
+  console.log(`Year: ${date.year}`);
+  ```
+</ResponseField>
+
+## Usage Examples
+
+### Display Current Date
+
+```javascript
+function formatDate() {
+  const monthNames = [
+    'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October'
+  ];
+  
+  return `${monthNames[date.month]} ${date.day}, Year ${date.year}`;
+}
+
+console.log(formatDate());
+// Output: "June 15, Year 3"
+```
+
+### Track Time Played
+
+```javascript
+function getTimePlayed() {
+  const ticks = date.ticksElapsed;
+  const seconds = Math.floor(ticks / 40);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  
+  return {
+    hours: hours,
+    minutes: minutes % 60,
+    seconds: seconds % 60,
+    total: `${hours}h ${minutes % 60}m ${seconds % 60}s`
+  };
+}
+
+console.log('Time played:', getTimePlayed().total);
+```
+
+### Schedule Events
+
+```javascript
+// Schedule an event for a specific date
+function scheduleEvent(targetYear, targetMonth, targetDay, callback) {
+  const checkDate = () => {
+    if (date.year === targetYear && 
+        date.month === targetMonth && 
+        date.day === targetDay) {
+      callback();
+      return true;
+    }
+    return false;
+  };
+  
+  const subscription = context.subscribe('interval.day', () => {
+    if (checkDate()) {
+      subscription.dispose();
+    }
+  });
+}
+
+// Schedule event for June 1, Year 5
+scheduleEvent(5, 3, 1, () => {
+  console.log('Scheduled event triggered!');
+  park.postMessage('Special event day!');
+});
+```
+
+### Calculate Dates
+
+```javascript
+// Calculate date from months elapsed
+function monthsToDate(months) {
+  const year = Math.floor(months / 8) + 1;
+  const month = months % 8;
+  return { year, month };
+}
+
+// Calculate months from year and month
+function dateToMonths(year, month) {
+  return (year - 1) * 8 + month;
+}
+
+// Get months until target date
+function monthsUntil(targetYear, targetMonth) {
+  const current = dateToMonths(date.year, date.month);
+  const target = dateToMonths(targetYear, targetMonth);
+  return target - current;
+}
+
+console.log(`Months until Year 10, October:`, monthsUntil(10, 7));
+```
+
+### Season Detector
+
+```javascript
+function getSeason() {
+  // March-May: Spring
+  // June-August: Summer
+  // September-October: Fall
+  if (date.month >= 0 && date.month <= 2) return 'Spring';
+  if (date.month >= 3 && date.month <= 5) return 'Summer';
+  return 'Fall';
+}
+
+console.log(`Current season: ${getSeason()}`);
+```
+
+### Monthly Report
+
+```javascript
+let lastMonth = -1;
+
+context.subscribe('interval.day', () => {
+  if (date.month !== lastMonth) {
+    lastMonth = date.month;
+    
+    console.log('=== Monthly Report ===');
+    console.log('Date:', formatDate());
+    console.log('Park Rating:', park.rating);
+    console.log('Guests:', park.guests);
+    console.log('Cash:', park.cash);
+  }
+});
+```
+
+### Countdown Timer
+
+```javascript
+function createCountdown(targetYear, targetMonth, targetDay) {
+  function getDaysRemaining() {
+    const currentTotal = date.year * 8 * 31 + date.month * 31 + date.day;
+    const targetTotal = targetYear * 8 * 31 + targetMonth * 31 + targetDay;
+    return targetTotal - currentTotal;
+  }
+  
+  return {
+    daysLeft: getDaysRemaining,
+    isExpired: () => getDaysRemaining() <= 0,
+    toString: () => {
+      const days = getDaysRemaining();
+      if (days < 0) return 'Expired';
+      const years = Math.floor(days / (8 * 31));
+      const months = Math.floor((days % (8 * 31)) / 31);
+      const remainingDays = days % 31;
+      return `${years}y ${months}m ${remainingDays}d`;
+    }
+  };
+}
+
+const countdown = createCountdown(10, 0, 1);
+console.log('Time remaining:', countdown.toString());
+```
+
+### Age Tracker
+
+```javascript
+// Track how long a ride has been operating
+function getRideAge(ride) {
+  const ageInMonths = date.monthsElapsed - ride.buildDate;
+  const years = Math.floor(ageInMonths / 8);
+  const months = ageInMonths % 8;
+  return { years, months, total: ageInMonths };
+}
+
+const ride = map.getRide(0);
+const age = getRideAge(ride);
+console.log(`${ride.name} is ${age.years} years and ${age.months} months old`);
+```
+
+### Time-Based Events
+
+```javascript
+// Trigger events at specific times
+context.subscribe('interval.day', () => {
+  // First day of summer
+  if (date.month === 3 && date.day === 1) {
+    console.log('Summer has begun!');
+    park.postMessage('Welcome to summer season!');
+  }
+  
+  // Last day of October (last day of game year)
+  if (date.month === 7 && date.day === 31) {
+    console.log('Year end approaching!');
+  }
+  
+  // Every 10th day
+  if (date.day % 10 === 0) {
+    console.log('Decade day!');
+  }
+});
+```
+
+## Date Manipulation
+
+<Warning>
+Manipulating the date directly can affect scenarios with time-based objectives. Use with caution.
+</Warning>
+
+```javascript
+// Jump forward one year
+date.monthsElapsed += 8;
+
+// Jump to a specific date
+function setDate(year, month) {
+  date.monthsElapsed = (year - 1) * 8 + month;
+}
+
+setDate(5, 0); // Jump to March, Year 5
+```
+
+## Real-Time Conversion
+
+```javascript
+// Convert game time to real time
+function gameToRealTime() {
+  const ticksPerSecond = 40;
+  const secondsElapsed = date.ticksElapsed / ticksPerSecond;
+  const minutesElapsed = secondsElapsed / 60;
+  const hoursElapsed = minutesElapsed / 60;
+  
+  return {
+    seconds: secondsElapsed,
+    minutes: minutesElapsed,
+    hours: hoursElapsed
+  };
+}
+
+// One game month takes ~6.8 real minutes
+// One game year takes ~54.4 real minutes
+```

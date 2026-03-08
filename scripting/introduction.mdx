@@ -1,0 +1,106 @@
+---
+title: Introduction to OpenRCT2 Scripting
+description: Overview of the OpenRCT2 plugin system and JavaScript scripting capabilities
+---
+
+OpenRCT2 allows custom scripts (also known as plugins) to be written and executed in the game, providing additional behavior on top of the vanilla experience. This can range from extra windows providing information about the park to entire new multiplayer game modes.
+
+## What are OpenRCT2 Plugins?
+
+Plugins are JavaScript files that extend OpenRCT2's functionality by interacting with the game through a comprehensive scripting API. Each script is a single physical JavaScript file within the `plugin` directory in your OpenRCT2 user directory.
+
+## Use Cases
+
+Plugins can be used for a wide variety of purposes:
+
+### Productivity Tools
+- Extra windows displaying park information
+- Custom dashboards and statistics
+- Enhanced editing tools
+- Title sequence editors
+
+### Game Enhancements
+- Custom game modes for multiplayer
+- Welcome messages and server management tools
+- Anti-spam and moderation systems
+- Kick/ban tools for servers
+
+### Automation
+- Park automation scripts
+- Scheduled events and actions
+- Custom ride ratings
+- Guest generation modifications
+
+## Plugin Directory Locations
+
+The user directory for each platform is usually:
+
+- **Windows:** `C:\Users\YourName\Documents\OpenRCT2`
+- **Mac:** `/Users/YourName/Library/Application Support/OpenRCT2`
+- **Linux:** `$XDG_CONFIG_HOME/OpenRCT2` or in its absence `$HOME/.config/OpenRCT2`
+
+You can also find the user directory via the "Open custom content folder" option under the red toolbox button in the game's title screen.
+
+## How Plugins are Loaded
+
+OpenRCT2 will load every single file with the extension `.js` in the `plugin` directory recursively. If you want to prevent a plugin from being used, you must move it outside this directory, or rename it so the filename does not end with `.js`.
+
+## JavaScript Engine
+
+Scripts are written in ECMAScript 5 compatible JavaScript. OpenRCT2 currently uses the [duktape](https://duktape.org) library to execute scripts.
+
+### Using Modern JavaScript
+
+While the engine supports ES5, you don't need to write in ES5 directly. You can use transpilers like [Babel](https://babeljs.io) or [TypeScript](https://www.typescriptlang.org) to write modern JavaScript (ES6+) with features such as:
+
+- Arrow functions
+- The `let` and `const` keywords
+- Classes
+- Template literals
+- Default parameters
+
+### TypeScript Support
+
+JavaScript or [TypeScript](https://www.typescriptlang.org) is recommended, as that will allow you to utilize the type definition file we supply (`openrct2.d.ts`). This provides rich editor features such as autocompletion and inline API documentation.
+
+## Official Resources
+
+Official references for writing plugins are:
+
+- **The API:** `openrct2.d.ts` distributed with OpenRCT2
+- **Sample scripts:** [OpenRCT2/plugin-samples](https://github.com/OpenRCT2/plugin-samples)
+- **TypeScript plugin example:** [IntelOrca/OpenRCT2-ParkManager](https://github.com/IntelOrca/OpenRCT2-ParkManager)
+
+## Editor Recommendations
+
+[Visual Studio Code](https://code.visualstudio.com) is recommended, as it supports the TypeScript definition file workflow very well, providing IntelliSense and API documentation even for JavaScript files.
+
+## Safety and Security
+
+### Sandbox Environment
+
+Scripts are executed in a sandbox container with no direct access to your computer. Scripts can only use the APIs provided, which consist of interactions with OpenRCT2 and a limited API for storing data.
+
+<Note>
+While scripts are sandboxed, it is technically possible for a script to freeze the game or fill your disc up with data. These issues are usually noticed quickly and are not particularly severe.
+</Note>
+
+The [duktape](https://duktape.org) library is a very mature library for executing scripts. If any security vulnerabilities are found, they will likely be fixed promptly and OpenRCT2 can be updated to use the new version.
+
+## Performance Considerations
+
+Scripts can consist of any behavior and have a large memory pool available to them. The speed will vary depending on the hardware and system executing them.
+
+<Warning>
+Scripts are interpreted, so do not expect anywhere close to the performance of native code. This should be satisfactory for most scenarios, but operations like random map generators or genetic algorithms for building roller coasters might struggle.
+</Warning>
+
+[Duktape provides engine-specific performance tips](https://wiki.duktape.org/performance) that can help optimize your scripts.
+
+## Growing the API
+
+The APIs for OpenRCT2 try to provide access to the game's data structures as much as possible, but can only be added over time. The best way to grow the plugin system is to add APIs on-demand.
+
+<Note>
+If you find an API is missing, please raise an issue on [GitHub](https://github.com/OpenRCT2/OpenRCT2/issues). Feel free to discuss it on Discord and submit a pull request.
+</Note>

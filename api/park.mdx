@@ -1,0 +1,417 @@
+---
+title: Park API
+description: Park management APIs for finances, guests, and park operations
+---
+
+The `park` object provides access to park management, finances, ratings, and guest-related functionality.
+
+## Financial Properties
+
+<ResponseField name="cash" type="number">
+  The current cash balance of the park.
+  ```javascript
+  park.cash = 50000; // Set cash to £50,000
+  console.log(`Cash: ${park.cash}`);
+  ```
+</ResponseField>
+
+<ResponseField name="bankLoan" type="number">
+  The current bank loan amount.
+  ```javascript
+  park.bankLoan = 10000; // Set loan to £10,000
+  ```
+</ResponseField>
+
+<ResponseField name="maxBankLoan" type="number">
+  The maximum bank loan available.
+  ```javascript
+  park.maxBankLoan = 50000;
+  ```
+</ResponseField>
+
+<ResponseField name="entranceFee" type="number">
+  The current entrance fee for the park.
+  ```javascript
+  park.entranceFee = 1000; // £10.00 entrance fee
+  ```
+</ResponseField>
+
+<ResponseField name="landPrice" type="number">
+  The purchase price of one tile for park ownership.
+  ```javascript
+  console.log(`Land costs ${park.landPrice} per tile`);
+  ```
+</ResponseField>
+
+<ResponseField name="constructionRightsPrice" type="number">
+  The purchase price of one tile for construction rights.
+  ```javascript
+  console.log(`Construction rights cost ${park.constructionRightsPrice}`);
+  ```
+</ResponseField>
+
+## Park Status
+
+<ResponseField name="rating" type="number">
+  The park rating from 0 to 999.
+  ```javascript
+  console.log(`Park rating: ${park.rating}`);
+  ```
+</ResponseField>
+
+<ResponseField name="value" type="number">
+  The park value, updated every 512 ticks.
+  ```javascript
+  console.log(`Park value: ${park.value}`);
+  ```
+</ResponseField>
+
+<ResponseField name="companyValue" type="number">
+  The company value, updated every 512 ticks.
+  Calculated as: `park.value + park.cash - park.bankLoan`
+  ```javascript
+  console.log(`Company value: ${park.companyValue}`);
+  ```
+</ResponseField>
+
+<ResponseField name="parkSize" type="number" readonly>
+  The number of tiles on the map with park ownership or construction rights.
+  Updated every 4096 ticks.
+  ```javascript
+  console.log(`Park size: ${park.parkSize} tiles`);
+  ```
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the park shown on the park entrance.
+  ```javascript
+  park.name = 'My Amazing Theme Park';
+  ```
+</ResponseField>
+
+<ResponseField name="casualtyPenalty" type="number">
+  The penalty points currently applied to the park rating for drowned guests and crashed coaster cars.
+  ```javascript
+  console.log(`Casualty penalty: ${park.casualtyPenalty}`);
+  ```
+</ResponseField>
+
+## Guest Management
+
+<ResponseField name="guests" type="number" readonly>
+  The number of guests within the park (not including guests outside but still on the map).
+  ```javascript
+  console.log(`Guests in park: ${park.guests}`);
+  ```
+</ResponseField>
+
+<ResponseField name="suggestedGuestMaximum" type="number" readonly>
+  The maximum number of guests that will spawn naturally (soft guest cap).
+  In scenarios with difficult guest generation, guests won't spawn above this value without advertisements.
+  ```javascript
+  console.log(`Max guests: ${park.suggestedGuestMaximum}`);
+  ```
+</ResponseField>
+
+<ResponseField name="guestGenerationProbability" type="number" readonly>
+  The probability out of 65535 that guests will spawn per tick.
+  Guests per second = 40 * (guestGenerationProbability / 65535)
+  ```javascript
+  const guestsPerSecond = 40 * (park.guestGenerationProbability / 65535);
+  console.log(`Guest spawn rate: ${guestsPerSecond.toFixed(2)}/s`);
+  ```
+</ResponseField>
+
+<ResponseField name="guestInitialCash" type="number" readonly>
+  The average amount of cash guests spawn with.
+  ```javascript
+  console.log(`Guests spawn with ${park.guestInitialCash} cash`);
+  ```
+</ResponseField>
+
+<ResponseField name="guestInitialHappiness" type="number" readonly>
+  The average happiness guests spawn at (0-255).
+  ```javascript
+  console.log(`Guest happiness: ${park.guestInitialHappiness}`);
+  ```
+</ResponseField>
+
+<ResponseField name="guestInitialHunger" type="number" readonly>
+  The average hunger guests spawn at (0-255).
+  ```javascript
+  console.log(`Guest hunger: ${park.guestInitialHunger}`);
+  ```
+</ResponseField>
+
+<ResponseField name="guestInitialThirst" type="number" readonly>
+  The average thirst guests spawn at (0-255).
+  ```javascript
+  console.log(`Guest thirst: ${park.guestInitialThirst}`);
+  ```
+</ResponseField>
+
+<ResponseField name="totalAdmissions" type="number">
+  The total number of guests that have entered the park.
+  ```javascript
+  console.log(`Total admissions: ${park.totalAdmissions}`);
+  ```
+</ResponseField>
+
+<ResponseField name="totalIncomeFromAdmissions" type="number">
+  The total amount of income gained from admissions into the park.
+  ```javascript
+  console.log(`Admission income: ${park.totalIncomeFromAdmissions}`);
+  ```
+</ResponseField>
+
+<ResponseField name="totalRideValueForMoney" type="number" readonly>
+  The sum of ride values, used to determine the most guests will pay to enter the park and for some awards.
+  Calculated as: sum of (ride value - ride price) * 2
+  ```javascript
+  console.log(`Total ride value: ${park.totalRideValueForMoney}`);
+  ```
+</ResponseField>
+
+### generateGuest()
+
+Spawns a new guest at a random peep spawn point.
+
+<Note>
+The "guest.generation" hook will be called before this function returns.
+</Note>
+
+```javascript
+const newGuest = park.generateGuest();
+console.log(`Generated guest ${newGuest.id}: ${newGuest.name}`);
+```
+
+## Research
+
+<ResponseField name="research" type="Research" readonly>
+  The current research status, including what has and hasn't been researched.
+  ```javascript
+  console.log(`Research funding: ${park.research.funding}`);
+  console.log(`Expected item: ${park.research.expectedItem?.type}`);
+  ```
+</ResponseField>
+
+<Expandable title="Research Properties">
+  <ResponseField name="inventedItems" type="ResearchItem[]">
+    The list of rides and scenery sets that have already been researched.
+  </ResponseField>
+  <ResponseField name="uninventedItems" type="ResearchItem[]">
+    The order of rides and scenery sets to be researched.
+  </ResponseField>
+  <ResponseField name="lastResearchedItem" type="ResearchItem | null" readonly>
+    The last item that was researched, or null if no item has been researched yet.
+  </ResponseField>
+  <ResponseField name="expectedItem" type="ResearchItem | null" readonly>
+    The item currently being researched, or null if research is complete.
+  </ResponseField>
+  <ResponseField name="funding" type="number">
+    Research funding level: 0 (none), 1 (minimum), 2 (normal), 3 (maximum)
+  </ResponseField>
+  <ResponseField name="priorities" type="ResearchCategory[]">
+    Research categories being prioritized: "transport", "gentle", "rollercoaster", "thrill", "water", "shop", "scenery"
+  </ResponseField>
+  <ResponseField name="stage" type="ResearchFundingStage">
+    Current research stage: "initial_research", "designing", "completing_design", "unknown", "finished_all"
+  </ResponseField>
+  <ResponseField name="progress" type="number">
+    Progress for the current stage (0-65535).
+  </ResponseField>
+  <ResponseField name="expectedMonth" type="number | null" readonly>
+    Expected completion month (0-7), where 0 is March and 7 is October.
+  </ResponseField>
+  <ResponseField name="expectedDay" type="number | null" readonly>
+    Expected completion day (1-31).
+  </ResponseField>
+</Expandable>
+
+## Park Flags
+
+### getFlag()
+
+Gets whether a given flag is set.
+
+<ParamField path="flag" type="ParkFlags" required>
+  The flag to test. Can be:
+  - `"difficultGuestGeneration"`
+  - `"difficultParkRating"`
+  - `"forbidHighConstruction"`
+  - `"forbidLandscapeChanges"`
+  - `"forbidMarketingCampaigns"`
+  - `"forbidTreeRemoval"`
+  - `"freeParkEntry"`
+  - `"noMoney"`
+  - `"open"`
+  - `"preferLessIntenseRides"`
+  - `"preferMoreIntenseRides"`
+  - `"scenarioCompleteNameInput"`
+  - `"unlockAllPrices"`
+</ParamField>
+
+```javascript
+if (park.getFlag('open')) {
+  console.log('Park is open');
+}
+
+if (park.getFlag('freeParkEntry')) {
+  console.log('Free entry enabled');
+}
+```
+
+### setFlag()
+
+Sets a flag to the given value.
+
+<ParamField path="flag" type="ParkFlags" required>
+  The flag to set.
+</ParamField>
+
+<ParamField path="value" type="boolean" required>
+  Whether to set or clear the flag.
+</ParamField>
+
+```javascript
+park.setFlag('open', true); // Open the park
+park.setFlag('freeParkEntry', true); // Enable free entry
+```
+
+## Messages and Awards
+
+<ResponseField name="messages" type="ParkMessage[]">
+  The park message/notification queue and historical messages.
+  ```javascript
+  park.messages.forEach(msg => {
+    console.log(`${msg.type}: ${msg.text}`);
+  });
+  ```
+</ResponseField>
+
+### postMessage()
+
+Posts a message to the park message queue.
+
+<Tabs>
+  <Tab title="Simple Message">
+    <ParamField path="message" type="string" required>
+      The message text to post.
+    </ParamField>
+    
+    ```javascript
+    park.postMessage('Welcome to the park!');
+    ```
+  </Tab>
+  <Tab title="Detailed Message">
+    <ParamField path="message" type="ParkMessageDesc" required>
+      Detailed message descriptor with type, text, and optional subject.
+    </ParamField>
+    
+    ```javascript
+    park.postMessage({
+      type: 'attraction',
+      text: 'New ride opened!',
+      subject: rideId
+    });
+    
+    park.postMessage({
+      type: 'peep',
+      text: 'VIP guest has arrived!',
+      subject: guestId
+    });
+    ```
+  </Tab>
+</Tabs>
+
+<ResponseField name="awards" type="Award[]" readonly>
+  The current awards of the park.
+  ```javascript
+  park.awards.forEach(award => {
+    console.log(`${award.text} (${award.monthsRemaining} months)`);
+  });
+  ```
+</ResponseField>
+
+### clearAwards()
+
+Clears all awards from the park.
+
+```javascript
+park.clearAwards();
+```
+
+### grantAward()
+
+Grants an award to the park without checking eligibility.
+
+<ParamField path="type" type="AwardType" required>
+  The award type to grant: "mostUntidy", "mostTidy", "bestRollerCoasters", "bestValue", "mostBeautiful", "worstValue", "safest", "bestStaff", "bestFood", "worstFood", "bestToilets", "mostDisappointing", "bestWaterRides", "bestCustomDesignedRides", "mostDazzlingRideColours", "mostConfusingLayout", "bestGentleRides"
+</ParamField>
+
+```javascript
+park.grantAward('bestRollerCoasters');
+```
+
+<Note>
+If the park already has 4 active awards, the oldest will be removed.
+</Note>
+
+## Financial History
+
+### getMonthlyExpenditure()
+
+Gets the monthly expenditure history for a given type.
+
+<ParamField path="type" type="ExpenditureType" required>
+  The type of expenditure: "ride_construction", "ride_runningcosts", "land_purchase", "landscaping", "park_entrance_tickets", "park_ride_tickets", "shop_sales", "shop_stock", "food_drink_sales", "food_drink_stock", "wages", "marketing", "research", "interest"
+</ParamField>
+
+```javascript
+const rideConstruction = park.getMonthlyExpenditure('ride_construction');
+console.log(`This month: ${rideConstruction[0]}`);
+console.log(`Last month: ${rideConstruction[1]}`);
+
+// Calculate total for last 3 months
+const total = rideConstruction.slice(0, 3).reduce((sum, v) => sum + v, 0);
+console.log(`Last 3 months total: ${total}`);
+```
+
+## Usage Examples
+
+### Park Status Dashboard
+
+```javascript
+function showParkStatus() {
+  console.log('=== Park Status ===');
+  console.log(`Name: ${park.name}`);
+  console.log(`Rating: ${park.rating}`);
+  console.log(`Cash: £${(park.cash / 10).toFixed(2)}`);
+  console.log(`Loan: £${(park.bankLoan / 10).toFixed(2)}`);
+  console.log(`Value: £${(park.value / 10).toFixed(2)}`);
+  console.log(`Guests: ${park.guests} / ${park.suggestedGuestMaximum}`);
+  console.log(`Open: ${park.getFlag('open')}`);
+}
+```
+
+### Auto-Open Park
+
+```javascript
+context.subscribe('interval.day', () => {
+  if (!park.getFlag('open') && park.rating >= 600) {
+    park.setFlag('open', true);
+    park.postMessage('Park is now open!');
+  }
+});
+```
+
+### Guest Spawner
+
+```javascript
+// Spawn a guest every 5 seconds
+context.setInterval(() => {
+  if (park.guests < park.suggestedGuestMaximum) {
+    park.generateGuest();
+  }
+}, 5000);
+```

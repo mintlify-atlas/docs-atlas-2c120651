@@ -1,0 +1,605 @@
+---
+title: Plugin Examples
+description: Real-world plugin examples and code snippets for OpenRCT2
+---
+
+This page provides practical examples to help you build your own OpenRCT2 plugins.
+
+## Basic Examples
+
+### Daily Cash Bonus
+
+A simple plugin that adds money to your park every day:
+
+```js
+function main() {
+    context.subscribe('interval.day', function() {
+        park.cash += 10000;
+        console.log("Daily bonus: $10,000 added!");
+    });
+}
+
+registerPlugin({
+    name: 'Daily Cash Bonus',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Welcome Message
+
+A remote plugin that welcomes players when they join a multiplayer server:
+
+```js
+function main() {
+    if (network.mode !== "server") return;
+    
+    context.subscribe('network.join', function(e) {
+        var player = network.getPlayer(e.player);
+        if (player) {
+            console.log("Player joined:", player.name);
+            network.sendMessage("Welcome to the server, " + player.name + "!");
+        }
+    });
+}
+
+registerPlugin({
+    name: 'Welcome Plugin',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## Data Storage Examples
+
+### Shared Storage
+
+Persist data across OpenRCT2 sessions:
+
+```js
+function main() {
+    var storage = context.sharedStorage;
+    
+    // Namespace your data
+    var namespace = 'YourName.PluginName.';
+    var key = namespace + 'VisitCount';
+    
+    // Get stored value or default to 0
+    var visits = storage.get(key, 0);
+    visits++;
+    
+    console.log("This plugin has been loaded " + visits + " times!");
+    
+    // Save the updated value
+    storage.set(key, visits);
+}
+
+registerPlugin({
+    name: 'Visit Counter',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Park Storage
+
+Store data specific to the current park:
+
+```js
+function main() {
+    var storage = context.getParkStorage();
+    
+    context.subscribe('interval.day', function() {
+        // Track total days played
+        var days = storage.get('totalDays', 0);
+        days++;
+        storage.set('totalDays', days);
+        
+        console.log("Total days in this park:", days);
+    });
+}
+
+registerPlugin({
+    name: 'Park Day Counter',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## UI Examples
+
+### Custom Information Window
+
+Create a window that displays park statistics:
+
+```js
+function main() {
+    if (typeof ui === 'undefined') return;
+    
+    ui.registerMenuItem('Park Stats', function() {
+        openStatsWindow();
+    });
+}
+
+function openStatsWindow() {
+    var window = ui.openWindow({
+        classification: 'park-stats',
+        title: 'Park Statistics',
+        width: 300,
+        height: 200,
+        widgets: [
+            {
+                type: 'label',
+                x: 10,
+                y: 20,
+                width: 280,
+                height: 14,
+                text: 'Park Name: ' + park.name
+            },
+            {
+                type: 'label',
+                x: 10,
+                y: 40,
+                width: 280,
+                height: 14,
+                text: 'Cash: $' + park.cash
+            },
+            {
+                type: 'label',
+                x: 10,
+                y: 60,
+                width: 280,
+                height: 14,
+                text: 'Guests: ' + park.guests
+            },
+            {
+                type: 'label',
+                x: 10,
+                y: 80,
+                width: 280,
+                height: 14,
+                text: 'Park Rating: ' + park.rating
+            },
+            {
+                type: 'label',
+                x: 10,
+                y: 100,
+                width: 280,
+                height: 14,
+                text: 'Rides: ' + map.rides.length
+            }
+        ]
+    });
+}
+
+registerPlugin({
+    name: 'Park Statistics',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## Game Action Examples
+
+### Automatic Landscaping
+
+Use game actions to modify terrain:
+
+```js
+function main() {
+    if (typeof ui === 'undefined') return;
+    
+    ui.registerMenuItem('Flatten Area', function() {
+        console.log("Click a tile to flatten a 3x3 area around it");
+        
+        ui.activateTool({
+            id: 'flatten-tool',
+            cursor: 'cross_hair',
+            onDown: function(e) {
+                flattenArea(e.mapCoords.x, e.mapCoords.y);
+            }
+        });
+    });
+}
+
+function flattenArea(centerX, centerY) {
+    // Get the center tile height
+    var centerTile = map.getTile(centerX / 32, centerY / 32);
+    if (!centerTile) return;
+    
+    var targetHeight = centerTile.baseHeight;
+    
+    // Flatten a 3x3 area
+    for (var dx = -1; dx <= 1; dx++) {
+        for (var dy = -1; dy <= 1; dy++) {
+            var x = centerX + (dx * 32);
+            var y = centerY + (dy * 32);
+            
+            context.executeAction('landsetheight', {
+                x: x,
+                y: y,
+                height: targetHeight,
+                style: 0
+            });
+        }
+    }
+}
+
+registerPlugin({
+    name: 'Flatten Tool',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Staff Auto-Hire
+
+Automatically hire staff when numbers drop:
+
+```js
+function main() {
+    var minHandymen = 5;
+    var minMechanics = 3;
+    
+    context.subscribe('interval.day', function() {
+        checkAndHireStaff('handyman', minHandymen, 0);
+        checkAndHireStaff('mechanic', minMechanics, 1);
+    });
+}
+
+function checkAndHireStaff(type, minCount, staffType) {
+    var currentCount = map.getAllEntities('staff').filter(function(staff) {
+        return staff.staffType === type;
+    }).length;
+    
+    if (currentCount < minCount) {
+        var toHire = minCount - currentCount;
+        console.log("Hiring " + toHire + " " + type + "(s)");
+        
+        for (var i = 0; i < toHire; i++) {
+            context.executeAction('staffhire', {
+                autoPosition: true,
+                staffType: staffType,
+                costumeIndex: 0,
+                staffOrders: staffType === 0 ? 15 : 3 // All orders
+            });
+        }
+    }
+}
+
+registerPlugin({
+    name: 'Auto Staff Manager',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## Custom Game Action Example
+
+### Custom Reward System
+
+Create a custom action for a reward system:
+
+```js
+function main() {
+    // Register custom action
+    context.registerAction(
+        'giveachievementreward',
+        
+        // Query
+        function(args) {
+            var achievement = args.args.achievement;
+            var reward = getRewardForAchievement(achievement);
+            
+            return {
+                cost: -reward // Negative cost = gain money
+            };
+        },
+        
+        // Execute
+        function(args) {
+            var achievement = args.args.achievement;
+            var reward = getRewardForAchievement(achievement);
+            
+            park.cash += reward;
+            
+            console.log("Achievement unlocked: " + achievement);
+            console.log("Reward: $" + reward);
+            
+            return {
+                cost: -reward
+            };
+        }
+    );
+    
+    // Check achievements each day
+    context.subscribe('interval.day', function() {
+        checkAchievements();
+    });
+}
+
+function getRewardForAchievement(achievement) {
+    var rewards = {
+        'first_coaster': 5000,
+        'hundred_guests': 10000,
+        'five_star_rating': 25000
+    };
+    return rewards[achievement] || 1000;
+}
+
+function checkAchievements() {
+    var storage = context.getParkStorage();
+    var achievements = storage.get('achievements', {});
+    
+    // Check for first coaster
+    if (!achievements.first_coaster && map.rides.length > 0) {
+        achievements.first_coaster = true;
+        storage.set('achievements', achievements);
+        context.executeAction('giveachievementreward', {
+            achievement: 'first_coaster'
+        });
+    }
+    
+    // Check for 100 guests
+    if (!achievements.hundred_guests && park.guests >= 100) {
+        achievements.hundred_guests = true;
+        storage.set('achievements', achievements);
+        context.executeAction('giveachievementreward', {
+            achievement: 'hundred_guests'
+        });
+    }
+    
+    // Check for 5-star rating
+    if (!achievements.five_star_rating && park.rating >= 999) {
+        achievements.five_star_rating = true;
+        storage.set('achievements', achievements);
+        context.executeAction('giveachievementreward', {
+            achievement: 'five_star_rating'
+        });
+    }
+}
+
+registerPlugin({
+    name: 'Achievement Rewards',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 68,
+    main: main
+});
+```
+
+## Network and Multiplayer Examples
+
+### Chat Commands
+
+Implement custom chat commands:
+
+```js
+function main() {
+    if (network.mode !== "server") return;
+    
+    context.subscribe('network.chat', function(e) {
+        var message = e.message;
+        
+        // Check for commands
+        if (message.startsWith('!help')) {
+            network.sendMessage("Available commands: !stats, !help");
+        } else if (message.startsWith('!stats')) {
+            var stats = "Park: " + park.name + 
+                        ", Guests: " + park.guests + 
+                        ", Rating: " + park.rating;
+            network.sendMessage(stats);
+        }
+    });
+}
+
+registerPlugin({
+    name: 'Chat Commands',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Socket Communication
+
+Communicate with external processes:
+
+```js
+function main() {
+    var server = network.createListener();
+    
+    server.on('connection', function(conn) {
+        console.log('External connection established');
+        
+        conn.on('data', function(data) {
+            console.log('Received data:', data);
+            
+            // Parse command
+            try {
+                var command = JSON.parse(data);
+                
+                if (command.type === 'get_stats') {
+                    var stats = {
+                        parkName: park.name,
+                        guests: park.guests,
+                        cash: park.cash,
+                        rating: park.rating
+                    };
+                    conn.write(JSON.stringify(stats));
+                }
+            } catch (error) {
+                console.log('Error parsing command:', error);
+            }
+        });
+        
+        conn.on('close', function() {
+            console.log('Connection closed');
+        });
+    });
+    
+    server.listen(8080);
+    console.log('Server listening on port 8080');
+}
+
+registerPlugin({
+    name: 'External API',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+<Note>
+Socket APIs can only listen and connect to localhost for security purposes. Use a reverse proxy if you need external communication.
+</Note>
+
+## Advanced Examples
+
+### Ride Rating Monitor
+
+Monitor and log ride ratings:
+
+```js
+function main() {
+    context.subscribe('ride.ratings.calculate', function(e) {
+        var ride = map.getRide(e.rideId);
+        if (!ride) return;
+        
+        console.log('Ride:', ride.name);
+        console.log('  Excitement:', e.excitement / 100);
+        console.log('  Intensity:', e.intensity / 100);
+        console.log('  Nausea:', e.nausea / 100);
+        
+        // Warn about low excitement
+        if (e.excitement < 400) {
+            console.log('  WARNING: Low excitement rating!');
+        }
+    });
+}
+
+registerPlugin({
+    name: 'Ride Rating Monitor',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Guest Generation Control
+
+Modify guest generation behavior:
+
+```js
+function main() {
+    context.subscribe('guest.generation', function(e) {
+        // Increase guest generation during good weather
+        if (climate.weather === 'sunny') {
+            e.numGuests = Math.floor(e.numGuests * 1.5);
+        }
+        
+        // Decrease during rain
+        if (climate.weather === 'rain') {
+            e.numGuests = Math.floor(e.numGuests * 0.5);
+        }
+        
+        console.log('Generating', e.numGuests, 'guests (weather:', climate.weather + ')');
+    });
+}
+
+registerPlugin({
+    name: 'Weather-Based Guest Generation',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## Third-Party Libraries
+
+You can embed third-party JavaScript libraries in your plugin. Use a bundler like webpack or just concatenate the library code:
+
+```js
+// Example: Using a simple helper library
+// (In practice, you'd bundle this with webpack or another tool)
+
+var MyHelpers = {
+    formatCurrency: function(amount) {
+        return '$' + amount.toLocaleString();
+    },
+    
+    formatDate: function(year, month, day) {
+        return year + '-' + 
+               String(month).padStart(2, '0') + '-' + 
+               String(day).padStart(2, '0');
+    }
+};
+
+function main() {
+    console.log('Park cash:', MyHelpers.formatCurrency(park.cash));
+    console.log('Date:', MyHelpers.formatDate(date.year, date.month, date.day));
+}
+
+registerPlugin({
+    name: 'Library Example',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+<Warning>
+Raw module statements like `import` and `require` are not supported unless transpiled by bundling tools.
+</Warning>
+
+## More Resources
+
+- **Sample plugins:** [OpenRCT2/plugin-samples](https://github.com/OpenRCT2/plugin-samples)
+- **Complex TypeScript example:** [IntelOrca/OpenRCT2-ParkManager](https://github.com/IntelOrca/OpenRCT2-ParkManager)
+- **Community plugins:** [openrct2plugins.org](https://openrct2plugins.org/)
+- **API documentation:** Check `openrct2.d.ts` distributed with OpenRCT2

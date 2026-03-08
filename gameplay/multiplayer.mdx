@@ -1,0 +1,390 @@
+---
+title: 'Multiplayer'
+description: 'Guide to OpenRCT2 multiplayer gameplay, hosting servers, and joining games'
+icon: 'users'
+---
+
+OpenRCT2 features cooperative multiplayer support, allowing multiple players to build and manage parks together in real-time. Players can collaborate on construction, ride management, and park operations simultaneously.
+
+## Getting Started
+
+### Requirements
+
+- OpenRCT2 version 0.4.0 or later
+- RollerCoaster Tycoon 2 game files
+- Network connection (LAN or Internet)
+- Port 11753 open for hosting (default)
+
+### Quick Start
+
+<Steps>
+  <Step title="Start OpenRCT2">
+    Launch OpenRCT2 and ensure you have a compatible version with other players.
+  </Step>
+  
+  <Step title="Choose Mode">
+    Select either "Start Server" to host a game or "Join Server" to connect to an existing server.
+  </Step>
+  
+  <Step title="Configure Settings">
+    For servers: Set server name, description, and port. For clients: Enter the host address and port.
+  </Step>
+  
+  <Step title="Play Together">
+    Once connected, all players can build and manage the park cooperatively.
+  </Step>
+</Steps>
+
+## Hosting a Server
+
+### Server Setup
+
+To host a multiplayer server:
+
+1. **Load a Park**: Open an existing save file or start a new scenario
+2. **Start Server**: Go to Multiplayer → Start Server
+3. **Configure Settings**:
+   - Server name (publicly visible)
+   - Server description (up to 256 characters)
+   - Password (optional)
+   - Port (default: 11753)
+   - Advertise on master server (optional)
+
+### Server Configuration
+
+```json
+{
+  "port": 11753,
+  "name": "My OpenRCT2 Server",
+  "description": "Welcome to my park!",
+  "password": "",
+  "advertise": true,
+  "maxPlayers": 255,
+  "greeting": "Welcome to the server!"
+}
+```
+
+### Network Settings
+
+**Default Port**: `11753` (TCP)
+**LAN Broadcast Port**: `11754` (UDP)
+**Master Server**: `https://servers.openrct2.io`
+
+### Server Advertising
+
+Servers can be advertised on the OpenRCT2 master server list, making them discoverable by other players:
+
+- Enable "Advertise on master server" in server settings
+- Your server will appear in the public server list
+- The master server periodically checks availability
+- Servers auto-register if the master server becomes unreachable and returns
+
+### Server Information
+
+Players can view server details including:
+
+- Server name and description
+- Current number of players
+- Provider name, email, and website
+- Greeting message
+- Game version and compatibility
+
+## Joining a Server
+
+### Connection Methods
+
+<Tabs>
+  <Tab title="Server List">
+    Browse the public server list to find and join advertised servers:
+    
+    1. Open Multiplayer menu
+    2. Select "Browse Servers"
+    3. Choose a server from the list
+    4. Click "Join"
+    5. Enter password if required
+  </Tab>
+  
+  <Tab title="Direct Connect">
+    Connect directly to a server using its IP address or hostname:
+    
+    1. Open Multiplayer menu
+    2. Select "Join Server"
+    3. Enter host address (e.g., `192.168.1.100` or `example.com`)
+    4. Enter port (default: 11753)
+    5. Enter password if required
+    6. Click "Connect"
+  </Tab>
+  
+  <Tab title="LAN Discovery">
+    Automatically discover servers on your local network:
+    
+    1. Open Multiplayer menu
+    2. Select "Browse LAN"
+    3. Servers on your network will appear automatically
+    4. Select a server and join
+  </Tab>
+</Tabs>
+
+### Connection Status
+
+During connection, you'll see various status messages:
+
+- **Connecting**: Establishing network connection
+- **Authenticating**: Verifying player credentials
+- **Downloading Map**: Receiving park data from server
+- **Loading Objects**: Loading required custom objects
+- **Connected**: Successfully joined the server
+
+### Map Download
+
+When joining a server, the client downloads the current park state:
+
+- Improved network protocol supports larger packets (v0.4.30+)
+- Handles servers with many custom objects
+- Supports large maps
+- Download size displayed in kibibytes
+- Progress bar shows download status
+
+## Player Management
+
+### Player Information
+
+View details about connected players:
+
+- Player name and ID
+- Ping (connection latency)
+- Money spent
+- Group/permissions
+- Last action performed
+- Commands executed count
+- IP address (server hosts only)
+- Public key hash for authentication
+
+### Player Groups & Permissions
+
+OpenRCT2 uses a group-based permission system. Server administrators can create groups with specific permissions:
+
+<AccordionGroup>
+  <Accordion title="Available Permissions">
+    - **Chat**: Send chat messages
+    - **Terraform**: Modify terrain and water levels
+    - **Set Water Level**: Change water height
+    - **Toggle Pause**: Pause/unpause the game
+    - **Create Ride**: Build new rides
+    - **Remove Ride**: Delete existing rides
+    - **Build Ride**: Modify ride tracks
+    - **Ride Properties**: Change ride settings
+    - **Scenery**: Place and remove scenery
+    - **Path**: Build and remove paths
+    - **Drag Path Area**: Use path area dragging tool (v0.4.30+)
+    - **Clear Landscape**: Use landscape clearing tools
+    - **Guest**: Manage guest actions
+    - **Staff**: Hire, fire, and manage staff
+    - **Park Properties**: Modify park settings
+    - **Park Funding**: Adjust budgets and loans
+    - **Kick Player**: Remove players from server
+    - **Modify Groups**: Create and edit permission groups
+    - **Set Player Group**: Assign players to groups
+    - **Cheat**: Use cheat menu
+    - **Toggle Scenery Cluster**: Enable/disable scenery clusters
+    - **Passwordless Login**: Join without password
+    - **Modify Tile**: Use tile inspector
+    - **Edit Scenario Options**: Change scenario settings
+  </Accordion>
+  
+  <Accordion title="Default Groups">
+    Servers come with preconfigured permission groups:
+    
+    - **Admin**: Full permissions including player management
+    - **Moderator**: Build permissions and limited management
+    - **User**: Basic building and gameplay permissions
+    - **Spectator**: View-only access, no building
+  </Accordion>
+  
+  <Accordion title="Group Management">
+    Server administrators can:
+    
+    - Create new permission groups
+    - Modify existing groups
+    - Assign players to groups
+    - Set default group for new players
+    - Save group configurations
+  </Accordion>
+</AccordionGroup>
+
+### Kicking Players
+
+Server hosts and players with appropriate permissions can remove disruptive players:
+
+1. Open the Player List
+2. Select the player to kick
+3. Click "Kick Player"
+4. The player will be disconnected from the server
+
+## Gameplay Features
+
+### Cooperative Building
+
+- Multiple players can build simultaneously
+- Actions are synchronized in real-time
+- Each player can work on different areas
+- Shared construction budget
+- Collaborative ride and scenery placement
+
+### Synchronization
+
+The game uses a tick-based synchronization system:
+
+- Server maintains authoritative game state
+- Clients send actions to server for validation
+- Server broadcasts confirmed actions to all clients
+- Desynchronization detection with automatic recovery
+- State snapshots for reconnection
+
+### Chat System
+
+Communicate with other players using the built-in chat:
+
+- Press `T` to open chat (default keybind)
+- Type message and press Enter to send
+- Messages visible to all connected players
+- Chat history saved to log files
+- Recent Messages window shows chat history
+
+### Multiplayer-Specific Features
+
+<CardGroup cols={2}>
+  <Card title="Player Tracking" icon="location-dot">
+    See where other players are working in the park and follow their viewports.
+  </Card>
+  
+  <Card title="Shared Resources" icon="coins">
+    All players share the park's budget, staff, and resources.
+  </Card>
+  
+  <Card title="Real-time Updates" icon="refresh">
+    Changes made by any player are immediately visible to all connected players.
+  </Card>
+  
+  <Card title="Persistence" icon="database">
+    Server host can save the park state and resume multiplayer sessions later.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Cannot Connect to Server">
+    **Possible causes and solutions:**
+    
+    - Verify server address and port are correct
+    - Check firewall settings allow OpenRCT2
+    - Ensure both client and server have compatible versions
+    - Confirm server is running and accepting connections
+    - Try disabling antivirus temporarily to test
+  </Accordion>
+  
+  <Accordion title="Desynchronization Issues">
+    **If the game desyncs:**
+    
+    - OpenRCT2 automatically detects desync conditions
+    - Clients can request a gamestate snapshot
+    - Server sends current game state to resynchronize
+    - If issues persist, try reconnecting
+    - Update to the latest version for improved stability
+  </Accordion>
+  
+  <Accordion title="Connection Aborted Early">
+    **If connection drops during join:**
+    
+    - Check network stability
+    - Ensure sufficient bandwidth for map download
+    - Verify all required objects are available
+    - Server may have restarted - try again
+    - Check server logs for error messages
+  </Accordion>
+  
+  <Accordion title="Crash When Opening Footpath Window">
+    **Historical issue (fixed in recent versions):**
+    
+    - Update both client and server to v0.4.14 or later
+    - Ensure multiplayer group permissions are properly configured
+    - Check for race conditions in window list initialization
+  </Accordion>
+  
+  <Accordion title="Placing Park Entrances Causes Desync">
+    **Fixed in v0.4.30+:**
+    
+    - Update to the latest version
+    - Entrances now properly synchronize across clients
+    - If using older versions, coordinate entrance placement carefully
+  </Accordion>
+</AccordionGroup>
+
+## Server Administration
+
+### Logging
+
+Servers automatically maintain logs:
+
+- **Server Log**: Connection events, errors, and game actions
+- **Chat Log**: All chat messages with timestamps
+- Logs saved in `OpenRCT2/logs/` directory
+- Customizable filename format: `%Y%m%d-%H%M%S.txt`
+
+### Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Regular Saves" icon="floppy-disk">
+    Save the park regularly to prevent data loss from crashes or disconnections.
+  </Card>
+  
+  <Card title="Permission Setup" icon="shield">
+    Configure groups carefully to prevent griefing while allowing collaborative play.
+  </Card>
+  
+  <Card title="Password Protection" icon="lock">
+    Use passwords for private servers to control who can join.
+  </Card>
+  
+  <Card title="Monitor Performance" icon="gauge">
+    Keep track of player count and server performance to ensure smooth gameplay.
+  </Card>
+</CardGroup>
+
+### Server Commands
+
+Host players have access to console commands for server management. See the [Console Commands](/api/console) documentation for details.
+
+## Version Compatibility
+
+- Clients and servers must run compatible OpenRCT2 versions
+- Network protocol updated in v0.4.30 for better large map support
+- Check the server's version before connecting
+- Keep OpenRCT2 updated for the latest multiplayer improvements
+
+## Technical Details
+
+### Network Architecture
+
+- Client-server architecture
+- TCP connections for reliable data transfer
+- UDP for LAN discovery broadcasts
+- Packet-based communication protocol
+- Authentication using public key cryptography
+- Token-based session management
+
+### Performance Considerations
+
+- Larger parks require more bandwidth
+- More players increase synchronization overhead
+- Custom objects must be transferred to joining clients
+- Network latency affects responsiveness
+- Server hardware determines maximum player capacity
+
+## Community Resources
+
+- [Multiplayer Discord Channels](https://discord.gg/fsEwSWs)
+- [Server Hosting Guide](https://github.com/OpenRCT2/OpenRCT2/wiki/Multiplayer)
+- [Public Server List](https://servers.openrct2.io)
+- [Multiplayer FAQ](https://github.com/OpenRCT2/OpenRCT2/wiki/Multiplayer-FAQ)

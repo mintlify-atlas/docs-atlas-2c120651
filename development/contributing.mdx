@@ -1,0 +1,120 @@
+---
+title: Contributing to OpenRCT2
+description: Learn how to contribute to OpenRCT2 through bug reports, translations, and code contributions
+---
+
+Any contribution to OpenRCT2 is welcome and valued. Contributions can be in the form of bug reports, translation or code additions/changes. If you have any questions or concerns, please ask in the [Discord chat](https://discordapp.com/invite/fsEwSWs).
+
+## Reporting Bugs
+
+To report a bug, ensure you have a GitHub account. Search the [issues page](https://github.com/OpenRCT2/OpenRCT2/issues) to see if the bug has already been reported.
+
+### Bug Report Requirements
+
+If the bug hasn't been reported, create a new issue and include:
+- Steps to reproduce the bug
+- A saved game if possible (very helpful for replication)
+- Your system architecture and game version
+
+### Version Information
+
+You can find your version information at the bottom left of the title screen or by running:
+
+```bash
+openrct2 --version
+```
+
+Example version output:
+```
+OpenRCT2, v0.0.6-develop build 84ddd12 provided by AppVeyor
+Windows (x86-64)
+```
+
+<Note>
+For Windows builds, OpenRCT2 will generate a memory dump and saved game when the game crashes unexpectedly. The game will open explorer to these files automatically. They are placed inside your configured user directory which by default is `%HOMEPATH%\Documents\OpenRCT2`.
+</Note>
+
+## Translation
+
+Translation is managed in a separate repository: [OpenRCT2/Localisation](https://github.com/OpenRCT2/Localisation). See the [Localization](/development/localization) page for detailed information about the translation workflow.
+
+## Contributing Code
+
+OpenRCT2 uses the [gitflow workflow](https://www.atlassian.com/git/tutorials/comparing-workflows#gitflow-workflow). If you are implementing a new feature or fixing a bug, please branch off and perform pull requests to `develop`. The `master` branch only contains tagged releases.
+
+### Before You Start
+
+<Warning>
+Please talk to the OpenRCT2 team first before starting to develop a new feature. We may already have plans for or reasons against something that you'd like to work on. Contact us via [Discord](https://discordapp.com/invite/fsEwSWs) to discuss your ideas.
+</Warning>
+
+### Code Hints
+
+#### Adding New Strings
+
+If you need to add a new localisable string to OpenRCT2:
+
+1. Add your new string entry to `./data/language/en-GB.txt`
+2. **Important**: Only edit `en-GB` in the OpenRCT2 repository as this is the base language used for translation
+3. Add a string constant for your strings to `./src/localisation/StringIds.h`
+
+<Note>
+After your pull request is merged, create a new issue in the [OpenRCT2/Localisation](https://github.com/OpenRCT2/Localisation) repository about the new strings you have added. This notifies translators so they can translate the new strings as quickly as possible.
+</Note>
+
+#### Language Files Location
+
+```
+./data/language/en-GB.txt          # Base language file
+./src/localisation/StringIds.h     # String constants
+```
+
+#### Coding Style
+
+Use the [OpenRCT2 Coding Style](https://github.com/OpenRCT2/OpenRCT2/wiki/Coding-Style) as a reference for new or changed code.
+
+#### Language Choice
+
+<Info>
+For now, it is recommended that you only write C++ files as the majority of the game is currently in C++. Exceptions are modules that have direct relationship to original code.
+</Info>
+
+## Community Channels
+
+<CardGroup cols={2}>
+  <Card title="Discord - Development" icon="discord" href="https://discord.gg/fsEwSWs">
+    Join the developer channel to discuss contributions and get help
+  </Card>
+  
+  <Card title="GitHub Issues" icon="github" href="https://github.com/OpenRCT2/OpenRCT2/issues">
+    Browse and report bugs in the issue tracker
+  </Card>
+  
+  <Card title="Localisation" icon="language" href="https://github.com/OpenRCT2/Localisation">
+    Contribute translations in the localisation repository
+  </Card>
+  
+  <Card title="Contributing Wiki" icon="book" href="https://github.com/OpenRCT2/OpenRCT2/wiki/How-To-Contribute">
+    Detailed guide on how to contribute code
+  </Card>
+</CardGroup>
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="What if I change an existing string?">
+    If you change any existing string, it is important that you create an issue in the OpenRCT2/Localisation repository. String changes can be more easily overlooked by translators, so notifying them helps keep translations up to date.
+  </Accordion>
+  
+  <Accordion title="Should I branch off master or develop?">
+    Always branch off and perform pull requests to `develop`. The `master` branch only contains tagged releases and you should never branch off this.
+  </Accordion>
+  
+  <Accordion title="Can I contribute to multiple languages?">
+    No. Only edit `en-GB.txt` in the main OpenRCT2 repository. The OpenRCT2/Localisation repository is used for translation pull requests, and changes to that repository are merged with the OpenRCT2 main repository every night.
+  </Accordion>
+  
+  <Accordion title="How do I test my changes?">
+    See the [Building the Game](/building) guides for information on compiling OpenRCT2 on different platforms. Once built, you can test your changes locally before submitting a pull request.
+  </Accordion>
+</AccordionGroup>

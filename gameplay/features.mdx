@@ -1,0 +1,227 @@
+---
+title: 'Features & Improvements'
+description: 'OpenRCT2 features and improvements over RollerCoaster Tycoon 2'
+icon: 'star'
+---
+
+OpenRCT2 is an open-source re-implementation of RollerCoaster Tycoon 2 that provides everything from the original game plus numerous improvements and additional features. The engine is written in modern C++ and supports contemporary platforms while maintaining gameplay compatibility with RCT2.
+
+## Core Improvements
+
+<CardGroup cols={2}>
+  <Card title="Modern Platform Support" icon="desktop">
+    Native support for Windows, macOS, Linux, and even Android/iOS platforms with better performance and stability than the original.
+  </Card>
+  
+  <Card title="Multiplayer" icon="users">
+    Cooperative multiplayer support allowing multiple players to build and manage parks together in real-time.
+  </Card>
+  
+  <Card title="Increased Limits" icon="chart-line">
+    Raised limits on entities, rides, and map size:
+    - Up to 3200 misc entities (vs 1600 in original)
+    - Larger map sizes supported
+    - More guests (slow down threshold raised to 52000 from 7000)
+  </Card>
+  
+  <Card title="Save File Compatibility" icon="floppy-disk">
+    Loads original RCT2 and RCT1 save files, scenarios, and track designs. Supports Zstd compression for faster saving and smaller files.
+  </Card>
+</CardGroup>
+
+## Enhanced Editing & Building Tools
+
+<CardGroup cols={2}>
+  <Card title="Advanced Construction" icon="hammer">
+    - Build in pause mode
+    - Place self-intersecting track designs
+    - Footpath area dragging tool
+    - Wall line dragging tool
+    - Maze construction auto-removes trees
+  </Card>
+  
+  <Card title="Clearance & Support Options" icon="wrench">
+    - Disable clearance checks
+    - Disable support limits
+    - Place tracks at invalid heights
+    - Show all operating modes
+    - Show vehicles from other track types
+  </Card>
+  
+  <Card title="Tile Inspector" icon="magnifying-glass">
+    Advanced tile editing capabilities for modifying map elements, changing properties, and fine-tuning park layouts.
+  </Card>
+  
+  <Card title="Zero Clearances" icon="crop">
+    Ability to build scenery and rides with overlapping elements for creative and compact park designs.
+  </Card>
+</CardGroup>
+
+## Gameplay Enhancements
+
+### Guest & Staff AI Improvements
+
+- Improved pathfinding and decision-making
+- Staff use appropriate animations when waiting at level crossings
+- Security guards walk slowly only in crowded areas
+- Guests have proper happiness penalties for low energy, hunger, thirst, and toilet needs
+- Better crowd management and performance
+
+### Ride & Track Features
+
+<CardGroup cols={2}>
+  <Card title="Track Designs" icon="draw-polygon">
+    - Rides with modern elements (zero G rolls, diagonal brakes) can be saved
+    - Track designs can be shifted underground
+    - Better preview rendering with correct path connections
+  </Card>
+  
+  <Card title="Operating Options" icon="gear">
+    - Unlock operating limits (fast lift hills)
+    - Chain lifts on all track pieces
+    - Disable train length limits
+    - Arbitrary ride type changes
+    - Powered launch mode adjustments
+  </Card>
+</CardGroup>
+
+### RCT1 Feature Re-introduction
+
+OpenRCT2 brings back several features from the original RollerCoaster Tycoon that were absent in RCT2:
+
+- Mountain tool available in-game
+- "Have Fun" objective
+- Launched coasters without passing through the station
+- Several toolbar buttons from RCT1
+
+## Graphics & Visual Features
+
+<CardGroup cols={2}>
+  <Card title="Rendering Improvements" icon="palette">
+    - OpenGL renderer support
+    - Better zoom levels and viewport controls
+    - Improved lighting effects
+    - Day/night cycle support
+    - Animated landscape edge doors
+  </Card>
+  
+  <Card title="UI Enhancements" icon="window">
+    - Resizable windows
+    - Searchable ride list with sorting
+    - Enhanced color picker with enlarged UI mode
+    - Preview images in load/save browser
+    - Land style dropdown with tooltips
+  </Card>
+</CardGroup>
+
+## Interface & Usability
+
+### User Interface
+
+- Modern keyboard shortcuts and hotkeys
+- Gamepad support with stick scrolling
+- Improved window management and viewport controls
+- Notification settings as part of Recent Messages window
+- Better file browser with sorting and filtering
+- In-game console for commands and scripting
+
+### Customization Options
+
+<CardGroup cols={2}>
+  <Card title="Theming" icon="paintbrush">
+    Full UI theming support with customizable colors and styles for a personalized experience.
+  </Card>
+  
+  <Card title="Translations" icon="language">
+    Multi-language support with community translations in dozens of languages including recent additions like Polish Złoty currency.
+  </Card>
+  
+  <Card title="Plugin System" icon="puzzle-piece">
+    JavaScript plugin API for extending gameplay, creating custom features, and automating tasks.
+  </Card>
+  
+  <Card title="Title Sequences" icon="film">
+    Custom title sequences and intro screens that can be created and shared with the community.
+  </Card>
+</CardGroup>
+
+## Performance & Technical
+
+### Optimization
+
+- Multi-threaded rendering and game logic
+- Faster sprite building and processing
+- Improved map selection grid rendering
+- Removal of 2000 animated tile limit
+- More efficient pathfinding algorithms
+- Better memory management
+
+### Developer Features
+
+<CardGroup cols={2}>
+  <Card title="Debug Tools" icon="bug">
+    - Debug bounding boxes in screenshots
+    - Debug segment heights
+    - Profiler with JSON export and call graph
+    - Extensive logging options
+  </Card>
+  
+  <Card title="Command Line" icon="terminal">
+    - Sprite builder commands
+    - Screenshot generation with coordinates
+    - Object export functionality
+    - Headless server mode
+  </Card>
+</CardGroup>
+
+## Scenario & Park Management
+
+- Import RCT1 scenarios and data
+- Load RCT Classic scenarios with packed objects
+- Scenario previews in selection window
+- Better park rating mechanics
+- Improved financial tracking and statistics
+- Marketing campaigns with proper availability checks
+- Toilet income categorized as shop sales
+
+## Weather & Environment
+
+- Freeze weather option
+- Force weather changes
+- Lightning and thunder effects with proper frequency
+- Snow and blizzard mechanics
+- Landscape tools considering sloped paths and tracks
+
+## Asset Support
+
+<CardGroup cols={2}>
+  <Card title="Custom Objects" icon="cube">
+    Support for JSON-based custom objects including rides, scenery, and staff costumes with proper palette support.
+  </Card>
+  
+  <Card title="OpenRCT2 Objects" icon="box">
+    - OpenGraphics project for new graphics
+    - OpenMusic for new soundtracks
+    - OpenScenarios for additional scenarios
+  </Card>
+</CardGroup>
+
+## Network Features
+
+For detailed information about multiplayer features, see the [Multiplayer](/gameplay/multiplayer) page.
+
+## Cheats System
+
+For a complete list of available cheats and how to use them, see the [Cheats](/gameplay/cheats) page.
+
+## Getting Help
+
+If you encounter issues or need assistance:
+
+- Check the [GitHub Issues](https://github.com/OpenRCT2/OpenRCT2/issues)
+- Join the [Discord community](https://discord.gg/ZXZd8D8)
+- Visit the [subreddit](https://www.reddit.com/r/openrct2/)
+
+## Further Development
+
+OpenRCT2 is actively developed with monthly releases. Check the [changelog](https://github.com/OpenRCT2/OpenRCT2/blob/develop/distribution/changelog.txt) for the latest features and bug fixes.

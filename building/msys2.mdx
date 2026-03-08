@@ -1,0 +1,463 @@
+---
+title: Building with MSYS2 MinGW
+description: Step-by-step guide to building OpenRCT2 with MSYS2 on Windows
+---
+
+This guide covers building OpenRCT2 from source on Windows using MSYS2 and the MinGW-w64 compiler. MSYS2 provides a Unix-like environment on Windows with easy package management.
+
+## Prerequisites
+
+### Installing MSYS2
+
+<Steps>
+  <Step title="Download MSYS2">
+    Download the installer from [msys2.org](https://www.msys2.org/)
+  </Step>
+
+  <Step title="Run the installer">
+    Install to the default location: `C:\msys64`
+  </Step>
+
+  <Step title="Update package database">
+    Launch **"MSYS2 MSYS"** from the Start Menu and run:
+    
+    ```bash
+    pacman -Syu
+    ```
+    
+    If prompted to close the terminal, do so and reopen it, then run:
+    
+    ```bash
+    pacman -Su
+    ```
+  </Step>
+</Steps>
+
+### MSYS2 Environments
+
+MSYS2 provides different environments:
+
+- **MSYS**: Unix-like tools (don't use for building OpenRCT2)
+- **MINGW64**: 64-bit Windows applications (recommended)
+- **MINGW32**: 32-bit Windows applications
+- **UCRT64**: 64-bit with Universal CRT (alternative to MINGW64)
+
+<Info>
+  Use **"MSYS2 MINGW64"** terminal for building 64-bit OpenRCT2.
+</Info>
+
+## Installing Dependencies
+
+Open **"MSYS2 MINGW64"** terminal and install build tools and dependencies:
+
+### For 64-bit build (MINGW64)
+
+```bash
+pacman -S --needed \
+  git \
+  mingw-w64-x86_64-toolchain \
+  mingw-w64-x86_64-cmake \
+  mingw-w64-x86_64-ninja \
+  mingw-w64-x86_64-pkg-config
+
+pacman -S --needed \
+  mingw-w64-x86_64-SDL2 \
+  mingw-w64-x86_64-libpng \
+  mingw-w64-x86_64-libzip \
+  mingw-w64-x86_64-zlib \
+  mingw-w64-x86_64-openssl \
+  mingw-w64-x86_64-curl \
+  mingw-w64-x86_64-freetype \
+  mingw-w64-x86_64-fontconfig \
+  mingw-w64-x86_64-icu \
+  mingw-w64-x86_64-zstd
+
+# Optional dependencies
+pacman -S --needed \
+  mingw-w64-x86_64-flac \
+  mingw-w64-x86_64-libvorbis \
+  mingw-w64-x86_64-libogg \
+  mingw-w64-x86_64-ccache
+```
+
+### For 32-bit build (MINGW32)
+
+Open **"MSYS2 MINGW32"** terminal:
+
+```bash
+pacman -S --needed \
+  git \
+  mingw-w64-i686-toolchain \
+  mingw-w64-i686-cmake \
+  mingw-w64-i686-ninja \
+  mingw-w64-i686-pkg-config
+
+pacman -S --needed \
+  mingw-w64-i686-SDL2 \
+  mingw-w64-i686-libpng \
+  mingw-w64-i686-libzip \
+  mingw-w64-i686-zlib \
+  mingw-w64-i686-openssl \
+  mingw-w64-i686-curl \
+  mingw-w64-i686-freetype \
+  mingw-w64-i686-fontconfig \
+  mingw-w64-i686-icu \
+  mingw-w64-i686-zstd
+```
+
+## Building OpenRCT2
+
+<Steps>
+  <Step title="Clone the repository">
+    In the **MSYS2 MINGW64** terminal:
+    
+    ```bash
+    git clone https://github.com/OpenRCT2/OpenRCT2.git
+    cd OpenRCT2
+    ```
+    
+    <Info>
+      The MSYS2 home directory is at `C:\msys64\home\YourUsername\`
+    </Info>
+  </Step>
+
+  <Step title="Create a build directory">
+    ```bash
+    mkdir build
+    cd build
+    ```
+    
+    <Warning>
+      Do not build in the source directory. CMake will reject in-source builds.
+    </Warning>
+  </Step>
+
+  <Step title="Configure the build">
+    For a release build:
+    
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ```
+    
+    For a debug build:
+    
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    ```
+  </Step>
+
+  <Step title="Compile">
+    ```bash
+    ninja
+    ```
+    
+    This compiles `openrct2.exe` and `openrct2-cli.exe` along with required asset files.
+  </Step>
+
+  <Step title="Locate binaries">
+    Built executables are in the build directory:
+    
+    ```bash
+    ls -lh openrct2.exe openrct2-cli.exe
+    ```
+  </Step>
+</Steps>
+
+## Running OpenRCT2
+
+### From MSYS2 Terminal
+
+```bash
+./openrct2.exe
+```
+
+### From Windows
+
+You can run the executable from Windows Explorer, but you need to ensure the MinGW DLLs are accessible.
+
+#### Option 1: Add MinGW to PATH
+
+Add to Windows PATH (requires restart or new terminal):
+
+```
+C:\msys64\mingw64\bin
+```
+
+#### Option 2: Copy DLLs to build directory
+
+```bash
+# From MSYS2 terminal
+cp /mingw64/bin/SDL2.dll .
+cp /mingw64/bin/libpng16-16.dll .
+cp /mingw64/bin/zlib1.dll .
+cp /mingw64/bin/libzip-5.dll .
+cp /mingw64/bin/libssl-*.dll .
+cp /mingw64/bin/libcrypto-*.dll .
+cp /mingw64/bin/libcurl-4.dll .
+cp /mingw64/bin/libfreetype-6.dll .
+cp /mingw64/bin/libstdc++-6.dll .
+cp /mingw64/bin/libgcc_s_seh-1.dll .
+cp /mingw64/bin/libwinpthread-1.dll .
+cp /mingw64/bin/libicu*.dll .
+cp /mingw64/bin/libzstd.dll .
+# Add other dependencies as needed
+```
+
+#### Option 3: Create a portable package
+
+Use the provided script:
+
+```bash
+# From repository root
+./scripts/build-portable
+```
+
+This creates a portable distribution with all necessary DLLs.
+
+## Build Options
+
+### Portable Build
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DPORTABLE=ON
+```
+
+### Headless Server Build
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_GUI=ON
+```
+
+### Static Build
+
+For a build with fewer DLL dependencies:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DSTATIC=ON
+```
+
+<Warning>
+  Fully static builds are difficult on Windows. Some DLLs may still be required.
+</Warning>
+
+### Building with Tests
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DWITH_TESTS=ON
+
+ninja
+
+# Run tests
+ctest --output-on-failure
+```
+
+### Disabling Features
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_OPENGL=ON \
+  -DDISABLE_FLAC=ON \
+  -DDISABLE_VORBIS=ON
+```
+
+## Using CCache
+
+CCache speeds up recompilation:
+
+```bash
+pacman -S mingw-w64-x86_64-ccache
+```
+
+CMake will automatically detect and use it. To disable:
+
+```bash
+cmake .. -G Ninja -DOPENRCT2_USE_CCACHE=OFF
+```
+
+## Accessing Windows Files
+
+Windows drives are available in MSYS2:
+
+```bash
+# Access C: drive
+cd /c/Users/YourUsername/Documents
+
+# Access D: drive
+cd /d/Games
+```
+
+## Troubleshooting
+
+### Wrong terminal environment
+
+<Warning>
+  Always use **"MSYS2 MINGW64"** (for 64-bit) or **"MSYS2 MINGW32"** (for 32-bit), not "MSYS2 MSYS".
+</Warning>
+
+Verify your environment:
+
+```bash
+echo $MSYSTEM
+# Should output: MINGW64 or MINGW32
+```
+
+### CMake not found
+
+If CMake is not found:
+
+```bash
+# Ensure you installed the mingw version, not msys version
+pacman -S mingw-w64-x86_64-cmake
+
+# Check it's in PATH
+which cmake
+# Should be: /mingw64/bin/cmake
+```
+
+### Compiler not found
+
+```bash
+# Install the toolchain
+pacman -S mingw-w64-x86_64-toolchain
+
+# Verify
+which gcc
+# Should be: /mingw64/bin/gcc
+```
+
+### Missing pkg-config files
+
+If CMake cannot find libraries:
+
+```bash
+# Check pkg-config paths
+pkg-config --variable pc_path pkg-config
+
+# Verify packages are installed
+pkg-config --list-all | grep -i sdl2
+```
+
+### DLL not found when running
+
+If you get missing DLL errors:
+
+```bash
+# Use ldd to find missing DLLs
+ldd openrct2.exe | grep "not found"
+
+# Copy missing DLLs from /mingw64/bin/
+cp /mingw64/bin/missing-dll.dll .
+```
+
+Or add `/mingw64/bin` to Windows PATH.
+
+### Building in-source error
+
+```bash
+rm -rf CMakeCache.txt CMakeFiles/
+mkdir build
+cd build
+cmake ..
+```
+
+### Stack protector issues
+
+If you encounter linking errors related to stack protector:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_FLAGS="-fno-stack-protector"
+```
+
+### Slow builds
+
+Enable parallel builds (Ninja does this by default):
+
+```bash
+ninja -j$(nproc)
+```
+
+Install CCache:
+
+```bash
+pacman -S mingw-w64-x86_64-ccache
+```
+
+## Advantages of MSYS2
+
+- **Easy dependency management**: Single `pacman` command
+- **Fast builds**: Native MinGW compiler
+- **Unix-like tools**: bash, grep, sed, etc.
+- **Package updates**: Regular updates through pacman
+- **Cross-compilation**: Can target both 32-bit and 64-bit
+
+## Comparing Build Methods
+
+| Feature | MSYS2 | Visual Studio | WSL |
+|---------|-------|---------------|-----|
+| Setup difficulty | Easy | Moderate | Easy |
+| Dependencies | pacman | vcpkg | apt |
+| Build speed | Fast | Moderate | Fast |
+| Debugging | GDB | Best (VS) | GDB |
+| Windows integration | Good | Best | Moderate |
+| File size | Smaller | Larger | N/A |
+
+## Creating a Distribution Package
+
+To create a distributable package:
+
+<Steps>
+  <Step title="Build in Release mode">
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ninja
+    ```
+  </Step>
+
+  <Step title="Use the build-portable script">
+    ```bash
+    cd ..
+    ./scripts/build-portable
+    ```
+    
+    This creates a portable build with all DLLs in the `bin/` directory.
+  </Step>
+
+  <Step title="Test the portable build">
+    Copy the `bin/` directory to another location or computer and verify it runs.
+  </Step>
+</Steps>
+
+## Updating MSYS2 Packages
+
+Keep your build environment updated:
+
+```bash
+# Update package database and installed packages
+pacman -Syu
+```
+
+After major updates, you may need to rebuild:
+
+```bash
+cd build
+rm -rf *
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+ninja
+```
+
+## Next Steps
+
+- [Building on Windows](/building/windows) - Alternative using Visual Studio
+- [Building on WSL](/building/wsl) - Alternative using Linux subsystem
+- [Contributing](/development/contributing) - Guidelines for contributing code

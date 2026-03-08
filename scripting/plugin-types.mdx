@@ -1,0 +1,252 @@
+---
+title: Plugin Types
+description: Understanding local, remote, and intransient plugin types in OpenRCT2
+---
+
+There are three types of scripts that influence how the game loads and executes the plugin:
+
+- **Local**
+- **Remote**
+- **Intransient**
+
+The plugin type is specified in the `type` field when calling `registerPlugin()`:
+
+```js
+registerPlugin({
+    name: 'My Plugin',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local', // or 'remote' or 'intransient'
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+## Singleplayer
+
+In singleplayer, all plugin types are unrestricted:
+
+- **Local and remote plugins** reload each time a scenario or save file is opened
+- Both types can alter game state directly or execute either built-in game actions or custom game actions
+- **Intransient plugins** load when the game starts and stay active until the game is shut down
+
+## Multiplayer
+
+In multiplayer, local and remote plugins behave very differently in terms of when they load and how they can alter game state.
+
+### Local Plugins
+
+**Local plugins** will load on any client in multiplayer that has the plugin installed. This allows each player to bring any plugin they have with them into the multiplayer server without other players needing to have the same plugin installed.
+
+#### Capabilities
+
+- Load on each client that has the plugin installed
+- **Cannot** alter game state directly
+- **Can** interact with the game by mimicking player actions through built-in game actions
+- May use custom actions, but clients without the plugin will not execute the registered callbacks, which may lead to a desync
+
+<Warning>
+Local plugins cannot alter the game state directly in multiplayer. Attempting to do so will result in the error: "Game state is not mutable in this context."
+</Warning>
+
+#### Typical Use Cases
+
+- Extra tools for productivity using built-in game actions
+- New windows containing information about aspects of the game or park
+- UI enhancements
+- Statistics and dashboards
+
+### Remote Plugins
+
+**Remote plugins** will only load in multiplayer when installed on the server. When players join a server, the remote script will be downloaded to the client and will stay active for the duration of the multiplayer session.
+
+<Note>
+Any remote plugins installed on the client will not load in multiplayer - only the server's remote plugins are used.
+</Note>
+
+#### Capabilities
+
+- Load only when installed on the server
+- Automatically downloaded to all connected clients
+- **Can** interact with the game through built-in game actions
+- **Can** alter game state directly, but **only** within the "execute" context of custom game actions
+- Custom actions ensure game state mutations are executed synchronously across all connected clients
+
+#### Typical Use Cases
+
+- Tools that need to mutate game state directly using custom game actions
+- Multiplayer server functionality:
+  - Welcome messages
+  - Anti-spam systems
+  - Kick/ban tools
+  - Server management utilities
+
+### Intransient Plugins
+
+**Intransient plugins** in multiplayer have the same restrictions as local plugins. They stay loaded across different parks and scenarios, and only interact with the game through game actions.
+
+#### Capabilities
+
+- Stay loaded when the game starts and remain active until shutdown
+- Persist across multiple park/scenario sessions
+- Available in the title screen
+- Same multiplayer restrictions as local plugins
+
+#### Typical Use Cases
+
+- Functionality that needs to work across different screens (title screen, scenario editor, etc.)
+- Title sequence editors
+- Global dashboards
+- Cross-session data tracking
+
+## Choosing the Right Plugin Type
+
+### For Singleplayer-Only Plugins
+
+If you're making a plugin that only uses built-in game actions to mutate the game, or is not mutating the game at all (like dashboards or info windows), then it's best to use a **local plugin**. You'll get multiplayer support out-of-the-box without any extra work.
+
+If you're making a plugin that mutates the game more directly via various APIs, make it a **remote plugin** to prevent it from loading when a player joins a server as a client.
+
+<Warning>
+If your plugin alters game state incorrectly in a multiplayer session, it will lead to desyncs! Always use game actions for state mutations.
+</Warning>
+
+Use **intransient plugins** only if you need the plugin to remain loaded across multiple park/scenario sessions or in the title screen, when using `context.sharedStorage` or `context.getParkStorage` for data persistence is not sufficient.
+
+### Quick Reference Table
+
+| Feature | Local | Remote | Intransient |
+|---------|-------|--------|-------------|
+| **Singleplayer** |
+| Loads on park open | ✓ | ✓ | ✗ |
+| Loads on game start | ✗ | ✗ | ✓ |
+| Can alter game state | ✓ | ✓ | ✓ |
+| **Multiplayer** |
+| Loads per client | ✓ | ✗ | ✓ |
+| Downloaded from server | ✗ | ✓ | ✗ |
+| Direct state mutation | ✗ | Via actions* | ✗ |
+| Built-in game actions | ✓ | ✓ | ✓ |
+| Custom game actions | ⚠️** | ✓ | ⚠️** |
+
+*Only within custom action execute context
+
+**May cause desyncs if not all clients have the plugin
+
+## Game State Mutation Error
+
+If you see the error **"Game state is not mutable in this context"**, it means you're attempting to modify the game state in a context where you should not be doing so.
+
+This can happen when:
+- Your script is `local` or `intransient` and trying to alter game state in a multiplayer session
+- Your script is `remote` and altering game state outside of a safe function callback in multiplayer
+
+In multiplayer, any changes to game state must be synchronized across all players to prevent desyncs. You must only change game state in:
+- Compatible hooks such as `interval.day`
+- The execute method of a custom game action
+
+See [Game Actions](/scripting/game-actions) for more information on safe state mutations.
+
+## Server vs Client Detection
+
+You can detect whether code is running on a server, client, or in singleplayer:
+
+```js
+if (network.mode == "server") {
+    console.log("This is a server...");
+} else if (network.mode == "client") {
+    console.log("This is a client...");
+} else {
+    console.log("This is single player...");
+}
+```
+
+## UI Availability
+
+Always check if the UI is available before using UI APIs, especially for remote plugins that may run on headless servers:
+
+```js
+if (typeof ui !== 'undefined') {
+    console.log("OpenRCT2 is not running in headless, UI is available!");
+    ui.registerMenuItem('My window', function() {
+        // ...
+    });
+}
+```
+
+<Note>
+The `ui` namespace is not available in headless mode. Remote scripts uploaded to clients can contain UI calls for the benefit of players not running in headless mode.
+</Note>
+
+## Examples
+
+### Local Plugin Example
+
+```js
+// A local plugin that shows park statistics
+function main() {
+    if (typeof ui !== 'undefined') {
+        ui.registerMenuItem('Park Stats', function() {
+            // Show custom window with park information
+        });
+    }
+}
+
+registerPlugin({
+    name: 'Park Statistics',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'local',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Remote Plugin Example
+
+```js
+// A remote plugin that welcomes new players
+function main() {
+    if (network.mode == "server") {
+        context.subscribe('network.join', function(e) {
+            console.log("Player joined:", e.player);
+            // Send welcome message
+        });
+    }
+}
+
+registerPlugin({
+    name: 'Welcome Plugin',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```
+
+### Intransient Plugin Example
+
+```js
+// An intransient plugin for global functionality
+function main() {
+    console.log("Global plugin loaded");
+    
+    // This stays active even on the title screen
+    context.subscribe('map.changed', function() {
+        console.log("Map changed!");
+    });
+}
+
+registerPlugin({
+    name: 'Global Monitor',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'intransient',
+    licence: 'MIT',
+    targetApiVersion: 34,
+    main: main
+});
+```

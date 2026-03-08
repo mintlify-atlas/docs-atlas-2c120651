@@ -1,0 +1,449 @@
+---
+title: Game Actions
+description: Understanding game actions for multiplayer-safe game modifications
+---
+
+Game actions are the recommended approach for mutating game state in OpenRCT2. They automatically ensure multiplayer safety and provide various sanity checks for money, clearance, permissions, and more.
+
+## What are Game Actions?
+
+Game actions are actions that players can invoke in games. For every action a player can perform that alters the park or scenario in some way, there is a built-in game action.
+
+Examples include:
+- Placing scenery
+- Raising or lowering land
+- Building ride tracks
+- Hiring staff
+- Changing park settings
+
+## How Game Actions Work
+
+### Singleplayer Flow
+
+Here's an example flow of a game action such as placing a small scenery item (like a tree):
+
+<Steps>
+  <Step title="Player initiates action">
+    Player attempts to perform action (places tree) via the game's interface.
+  </Step>
+
+  <Step title="Query validation">
+    The query method of the game action "place small scenery" is called and checks:
+    - Can the player afford to place the item?
+    - Is the placement tile owned by the park?
+    - Is the placement location blocked by another tile element?
+  </Step>
+
+  <Step title="Handle query result">
+    If the query fails, show an error message.
+    
+    If the query succeeds and the game is singleplayer: the execute function for "place small scenery" is called.
+  </Step>
+
+  <Step title="Execute action">
+    A tree is placed at the location specified by the game action.
+  </Step>
+</Steps>
+
+### Multiplayer Flow
+
+In multiplayer, there are additional steps to ensure synchronization:
+
+<Steps>
+  <Step title="Player initiates action">
+    Player attempts to perform action via the game's interface.
+  </Step>
+
+  <Step title="Client-side query">
+    The query method of the game action is called on the client.
+  </Step>
+
+  <Step title="Send to server">
+    If the query fails, show an error message.
+    
+    If the query succeeds: game action is sent to the server.
+  </Step>
+
+  <Step title="Server permission check">
+    Server checks if the player has permissions to perform the game action.
+  </Step>
+
+  <Step title="Server-side query">
+    Server calls the query method again.
+  </Step>
+
+  <Step title="Server validation">
+    If the permission check or the query fails, the server sends an error message back to the client.
+    
+    If both succeed: send action to all players to execute at a specified tick.
+  </Step>
+
+  <Step title="Synchronized execution">
+    All player clients receive the game action and execute it at the specified tick.
+  </Step>
+
+  <Step title="Result">
+    A tree is placed at the specified location on all clients connected to the server.
+  </Step>
+</Steps>
+
+<Note>
+This sequence ensures that every player client executes the game action exactly the same way on the exact same game tick (synchronized execution). This is why there is a noticeable delay when constructing in multiplayer - the client must wait for the server to acknowledge the action and reply with the tick number.
+</Note>
+
+## Using Game Actions in Plugins
+
+Plugins can use game actions to alter the game in the same way players can. This is the **recommended approach** for mutating game state.
+
+### Executing Built-in Game Actions
+
+You can execute any built-in game action using `context.executeAction()`:
+
+```js
+// Raise land at coordinates
+context.executeAction('landraise', {
+    x: 1024,
+    y: 1024,
+    x1: 1024,
+    y1: 1024,
+    x2: 1056,
+    y2: 1056,
+    selectionType: 0
+}, function(result) {
+    if (result.error === 0) {
+        console.log("Land raised successfully!");
+    } else {
+        console.log("Failed to raise land:", result.errorMessage);
+    }
+});
+```
+
+### Querying Game Actions
+
+Before executing, you can query an action to check if it would succeed and what the cost would be:
+
+```js
+// Query the cost of placing scenery
+context.queryAction('smallsceneryplace', {
+    x: 1024,
+    y: 1024,
+    z: 32,
+    direction: 0,
+    object: 5,
+    quadrant: 0,
+    primaryColour: 1,
+    secondaryColour: 2,
+    tertiaryColour: 3
+}, function(result) {
+    if (result.error === 0) {
+        console.log("Cost would be:", result.cost);
+        // Now execute if desired
+    } else {
+        console.log("Action would fail:", result.errorMessage);
+    }
+});
+```
+
+### Available Game Actions
+
+Some commonly used built-in game actions include:
+
+- **Land:** `landraise`, `landlower`, `landsetheight`, `landsmooth`
+- **Water:** `waterraise`, `waterlower`, `watersetheight`
+- **Scenery:** `smallsceneryplace`, `smallsceneryremove`, `largesceneryplace`, `largesceneryremove`
+- **Rides:** `ridecreate`, `ridedemolish`, `ridesetname`, `ridesetstatus`, `trackplace`, `trackremove`
+- **Staff:** `staffhire`, `stafffire`, `staffsetname`, `staffsetorders`
+- **Park:** `parksetname`, `parksetentrancefee`, `parksetloan`
+- **Footpaths:** `footpathplace`, `footpathremove`
+
+See the `openrct2.d.ts` file for the complete list and parameter definitions.
+
+## Custom Game Actions
+
+Remote plugins can register their own custom game actions with query and execute functions written in JavaScript. This allows custom game state mutations to be executed in sync for all players on the server.
+
+### Registering a Custom Action
+
+```js
+function main() {
+    // Register a custom action
+    context.registerAction(
+        'mycustomaction',
+        
+        // Query function - validates and returns cost
+        function(args) {
+            // Validate the action
+            if (park.cash < 1000) {
+                return {
+                    error: 1,
+                    errorTitle: "Insufficient funds",
+                    errorMessage: "You need at least $1000"
+                };
+            }
+            
+            // Return success with cost
+            return {
+                cost: 1000
+            };
+        },
+        
+        // Execute function - performs the action
+        function(args) {
+            // Validate again (always validate in execute too!)
+            if (park.cash < 1000) {
+                return {
+                    error: 1,
+                    errorTitle: "Insufficient funds"
+                };
+            }
+            
+            // Perform the mutation
+            park.cash -= 1000;
+            // Do custom logic here
+            
+            return {
+                cost: 1000
+            };
+        }
+    );
+}
+```
+
+### Using Custom Actions
+
+```js
+// Execute your custom action
+context.executeAction('mycustomaction', {}, function(result) {
+    if (result.error === 0) {
+        console.log("Custom action succeeded!");
+    } else {
+        console.log("Custom action failed:", result.errorMessage);
+    }
+});
+```
+
+### Custom Action Parameters (API v68+)
+
+<Warning>
+As of version 68, custom game actions registered through `context.registerAction()` wrap the callback arguments in a `GameActionEventArgs` object, similar to `context.subscribe()` callbacks.
+</Warning>
+
+```js
+// For API version 68 and later
+context.registerAction(
+    'mycustomaction',
+    
+    function(args) {
+        // args is now a GameActionEventArgs object
+        var customParams = args.args; // Your custom parameters
+        var player = args.player;     // Player ID who initiated
+        var isClientOnly = args.isClientOnly;
+        
+        // Your validation logic
+        return { cost: 0 };
+    },
+    
+    function(args) {
+        var customParams = args.args;
+        // Your execution logic
+        return { cost: 0 };
+    }
+);
+```
+
+## Permission Checks
+
+<Warning>
+Custom game actions have no permission checks by default. The plugin is responsible for implementing proper permission checks.
+</Warning>
+
+Example permission check:
+
+```js
+context.registerAction(
+    'mycustomaction',
+    
+    function(args) {
+        // Check if player has permission (in multiplayer)
+        if (network.mode === "server" && args.player !== undefined) {
+            var player = network.getPlayer(args.player);
+            if (!player || player.group !== 0) { // 0 = admin group
+                return {
+                    error: 1,
+                    errorTitle: "Permission denied",
+                    errorMessage: "Only admins can use this action"
+                };
+            }
+        }
+        
+        return { cost: 0 };
+    },
+    
+    function(args) {
+        // Same permission check in execute
+        if (network.mode === "server" && args.player !== undefined) {
+            var player = network.getPlayer(args.player);
+            if (!player || player.group !== 0) {
+                return {
+                    error: 1,
+                    errorTitle: "Permission denied"
+                };
+            }
+        }
+        
+        // Execute the action
+        return { cost: 0 };
+    }
+);
+```
+
+## Best Practices
+
+### Always Use Game Actions for State Mutations
+
+<Warning>
+Direct game state mutations outside of game actions will cause desyncs in multiplayer!
+</Warning>
+
+```js
+// ❌ BAD - Direct mutation (will desync in multiplayer)
+function badExample() {
+    park.cash += 10000;
+}
+
+// ✓ GOOD - Use game action or safe hook
+function goodExample() {
+    context.subscribe('interval.day', function() {
+        park.cash += 10000; // Safe within interval.day hook
+    });
+}
+
+// ✓ GOOD - Use built-in game action
+function goodExampleWithAction() {
+    context.executeAction('parksetloan', {
+        value: park.bankLoan - 1000
+    });
+}
+```
+
+### Validate in Both Query and Execute
+
+Always validate in both the query and execute functions. The game state might change between query and execute, especially in multiplayer.
+
+```js
+function validateAction(args) {
+    if (park.cash < 5000) {
+        return { error: 1, errorMessage: "Insufficient funds" };
+    }
+    return null;
+}
+
+context.registerAction(
+    'myaction',
+    
+    function(args) {
+        var error = validateAction(args.args);
+        if (error) return error;
+        return { cost: 5000 };
+    },
+    
+    function(args) {
+        var error = validateAction(args.args);
+        if (error) return error;
+        
+        park.cash -= 5000;
+        // Perform action
+        
+        return { cost: 5000 };
+    }
+);
+```
+
+### Avoid Non-Deterministic Data
+
+Never use local-specific or non-deterministic data in game actions:
+
+```js
+// ❌ BAD - ui.windows is different for each client
+context.registerAction('badaction', query, function(args) {
+    if (ui.windows.length > 0) { // Will desync!
+        // ...
+    }
+});
+
+// ✓ GOOD - Use only game state
+context.registerAction('goodaction', query, function(args) {
+    if (map.rides.length > 0) { // Consistent across all clients
+        // ...
+    }
+});
+```
+
+## Safe Hooks for State Mutation
+
+Certain hooks are safe for direct game state mutation because they execute synchronously:
+
+```js
+// Safe: interval.day hook
+context.subscribe('interval.day', function() {
+    park.cash += 10000; // Safe
+});
+
+// Safe: Custom action execute
+context.registerAction('myaction', query, function(args) {
+    park.cash -= 1000; // Safe
+});
+
+// Unsafe: Most other contexts
+function unsafeContext() {
+    park.cash += 10000; // Will cause "Game state is not mutable" error
+}
+```
+
+## Example: Custom Reward Action
+
+Here's a complete example of a custom action that rewards the player:
+
+```js
+function main() {
+    context.registerAction(
+        'dailyreward',
+        
+        function(args) {
+            // Query: Check if we can give reward
+            var rewardAmount = args.args.amount || 5000;
+            
+            return {
+                cost: -rewardAmount // Negative cost = gain money
+            };
+        },
+        
+        function(args) {
+            // Execute: Give the reward
+            var rewardAmount = args.args.amount || 5000;
+            park.cash += rewardAmount;
+            
+            console.log("Rewarded player with $" + rewardAmount);
+            
+            return {
+                cost: -rewardAmount
+            };
+        }
+    );
+    
+    // Give reward every day
+    context.subscribe('interval.day', function() {
+        context.executeAction('dailyreward', { amount: 5000 });
+    });
+}
+
+registerPlugin({
+    name: 'Daily Reward',
+    version: '1.0',
+    authors: ['Your Name'],
+    type: 'remote',
+    licence: 'MIT',
+    targetApiVersion: 68,
+    main: main
+});
+```

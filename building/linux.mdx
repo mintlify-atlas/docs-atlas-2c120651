@@ -1,0 +1,374 @@
+---
+title: Building on Linux
+description: Step-by-step guide to building OpenRCT2 on Linux
+---
+
+This guide covers building OpenRCT2 from source on various Linux distributions.
+
+## Prerequisites
+
+### Build Tools
+
+You'll need CMake 3.24+, a C++20 compiler (GCC 12+ or Clang 11+), and Ninja or Make.
+
+### Required Dependencies
+
+OpenRCT2 requires the following development libraries:
+
+- SDL2 development files
+- libzip (≥1.0)
+- zlib
+- libpng (≥1.6)
+- OpenSSL (≥1.0.0)
+- libcurl
+- FreeType2
+- fontconfig
+- ICU (libicu)
+- zstd (libzstd)
+
+### Optional Dependencies
+
+- FLAC (libflac)
+- Vorbis (libvorbis, libvorbisfile)
+- Ogg (libogg)
+- OpenGL development files
+- discord-rpc
+- ccache (for faster rebuilds)
+
+## Installing Dependencies
+
+<CodeGroup>
+
+```bash Ubuntu/Debian
+sudo apt update
+sudo apt install -y \
+  git cmake ninja-build \
+  g++ pkg-config \
+  libsdl2-dev \
+  libzip-dev libpng-dev \
+  libssl-dev libcurl4-openssl-dev \
+  libfreetype6-dev libfontconfig1-dev \
+  libicu-dev libzstd-dev \
+  zlib1g-dev
+
+# Optional dependencies
+sudo apt install -y \
+  libflac-dev libvorbis-dev libogg-dev \
+  mesa-common-dev libgl1-mesa-dev \
+  ccache
+```
+
+```bash Fedora
+sudo dnf install -y \
+  git cmake ninja-build \
+  gcc-c++ pkgconfig \
+  SDL2-devel \
+  libzip-devel libpng-devel \
+  openssl-devel libcurl-devel \
+  freetype-devel fontconfig-devel \
+  libicu-devel libzstd-devel \
+  zlib-devel
+
+# Optional dependencies
+sudo dnf install -y \
+  flac-devel libvorbis-devel libogg-devel \
+  mesa-libGL-devel \
+  ccache
+```
+
+```bash Arch Linux
+sudo pacman -S --needed \
+  git cmake ninja \
+  gcc pkgconf \
+  sdl2 \
+  libzip libpng \
+  openssl curl \
+  freetype2 fontconfig \
+  icu zstd \
+  zlib
+
+# Optional dependencies
+sudo pacman -S --needed \
+  flac libvorbis libogg \
+  mesa \
+  ccache
+```
+
+```bash openSUSE
+sudo zypper install -y \
+  git cmake ninja \
+  gcc-c++ pkg-config \
+  libSDL2-devel \
+  libzip-devel libpng16-devel \
+  libopenssl-devel libcurl-devel \
+  freetype2-devel fontconfig-devel \
+  libicu-devel libzstd-devel \
+  zlib-devel
+
+# Optional dependencies
+sudo zypper install -y \
+  flac-devel libvorbis-devel libogg-devel \
+  Mesa-libGL-devel \
+  ccache
+```
+
+</CodeGroup>
+
+## Building OpenRCT2
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/OpenRCT2/OpenRCT2.git
+    cd OpenRCT2
+    ```
+  </Step>
+
+  <Step title="Create a build directory">
+    ```bash
+    mkdir build
+    cd build
+    ```
+    
+    <Warning>
+      Do not build in the source directory. CMake will reject in-source builds.
+    </Warning>
+  </Step>
+
+  <Step title="Configure the build">
+    For a standard release build:
+    
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ```
+    
+    For a debug build:
+    
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug
+    ```
+    
+    To install to a custom prefix:
+    
+    ```bash
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/usr/local
+    ```
+  </Step>
+
+  <Step title="Compile">
+    ```bash
+    ninja
+    ```
+    
+    This will compile both `openrct2` (the GUI) and `openrct2-cli` (the headless server).
+    
+    The build process will also generate required asset files (`g2.dat`, `fonts.dat`, `palettes.dat`, `tracks.dat`).
+  </Step>
+
+  <Step title="Install (optional)">
+    To install system-wide:
+    
+    ```bash
+    sudo ninja install
+    ```
+    
+    Or to a custom DESTDIR:
+    
+    ```bash
+    DESTDIR=/tmp/openrct2-install ninja install
+    ```
+  </Step>
+</Steps>
+
+## Build Options
+
+### Creating a Portable Build
+
+For a portable build that can be moved to any directory:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DPORTABLE=ON
+```
+
+This sets the RPATH to `$ORIGIN`, allowing the binary to find libraries relative to its location.
+
+### Building for AppImage
+
+For AppImage packaging:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DAPPIMAGE=ON
+```
+
+This sets RPATH to `$ORIGIN/../lib` for the AppImage directory structure.
+
+### Headless Build (Server Only)
+
+To build only the headless server without GUI support:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_GUI=ON
+```
+
+### Static Linking
+
+For a statically linked build:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DSTATIC=ON
+```
+
+### Building with Tests
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DWITH_TESTS=ON
+
+ninja
+
+# Run tests
+ctest --output-on-failure
+```
+
+## Running OpenRCT2
+
+After building, you can run OpenRCT2 directly from the build directory:
+
+```bash
+./openrct2
+```
+
+For the headless server:
+
+```bash
+./openrct2-cli host /path/to/save.sv6
+```
+
+<Info>
+  On first run, OpenRCT2 will ask you to locate your RollerCoaster Tycoon 2 installation directory.
+</Info>
+
+## Using CCache
+
+CCache can significantly speed up rebuilds. It's enabled by default if detected.
+
+To install CCache:
+
+<CodeGroup>
+
+```bash Ubuntu/Debian
+sudo apt install ccache
+```
+
+```bash Fedora
+sudo dnf install ccache
+```
+
+```bash Arch Linux
+sudo pacman -S ccache
+```
+
+</CodeGroup>
+
+To disable CCache:
+
+```bash
+cmake .. -G Ninja -DOPENRCT2_USE_CCACHE=OFF
+```
+
+## Troubleshooting
+
+### GCC Version Too Old
+
+<Warning>
+  GCC 12 or later is required. Older versions will fail to compile.
+</Warning>
+
+If your distribution provides an older GCC:
+
+<CodeGroup>
+
+```bash Ubuntu (use GCC from toolchain PPA)
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt update
+sudo apt install gcc-12 g++-12
+export CC=gcc-12
+export CXX=g++-12
+```
+
+```bash Fedora (use newer GCC)
+sudo dnf install gcc-toolset-12
+scl enable gcc-toolset-12 bash
+```
+
+</CodeGroup>
+
+Or use Clang instead:
+
+```bash
+sudo apt install clang  # Ubuntu/Debian
+export CC=clang
+export CXX=clang++
+```
+
+### Missing pkg-config Files
+
+If CMake cannot find libraries:
+
+```bash
+# Check pkg-config can find libraries
+pkg-config --modversion sdl2
+pkg-config --modversion libzip
+pkg-config --modversion libpng
+
+# If not found, install the -dev packages
+```
+
+### OpenSSL Link Errors
+
+If you encounter OpenSSL linking issues:
+
+```bash
+# Make sure openssl-dev is installed
+sudo apt install libssl-dev  # Ubuntu/Debian
+sudo dnf install openssl-devel  # Fedora
+```
+
+### X11/OpenGL Errors
+
+For headless systems or when OpenGL is causing issues:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_OPENGL=ON
+```
+
+## Native Packages
+
+Several distributions offer pre-built OpenRCT2 packages:
+
+- **Arch Linux**: `sudo pacman -S openrct2`
+- **Gentoo**: `emerge games-simulation/openrct2`
+- **NixOS**: `nix-env -iA nixpkgs.openrct2`
+- **Ubuntu PPA**: Available from the [nightly PPA](https://launchpad.net/~openrct2/+archive/ubuntu/nightly)
+- **Flatpak**: `flatpak install flathub io.openrct2.OpenRCT2`
+
+These may be easier than building from source if you don't need the latest development version.
+
+## Next Steps
+
+- [Building on WSL](/building/wsl) - Alternative method using Windows Subsystem for Linux
+- [Contributing](/development/contributing) - Guidelines for contributing code
+- [Development Setup]() - Setting up your development environment

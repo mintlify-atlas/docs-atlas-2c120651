@@ -1,0 +1,372 @@
+---
+title: Building on macOS
+description: Step-by-step guide to building OpenRCT2 on macOS
+---
+
+This guide covers building OpenRCT2 from source on macOS using CMake.
+
+## Prerequisites
+
+### System Requirements
+
+- **macOS 10.14** (Mojave) or later for x86_64
+- **macOS 11.0** (Big Sur) or later for Apple Silicon (arm64)
+- **Xcode Command Line Tools** or **Xcode** with C++ compiler
+- **Homebrew** package manager
+
+### Installing Xcode Command Line Tools
+
+If you haven't already:
+
+```bash
+xcode-select --install
+```
+
+### Installing Homebrew
+
+If Homebrew is not installed:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+## Installing Dependencies
+
+### Using System Libraries (Homebrew)
+
+Install build tools and dependencies:
+
+```bash
+brew install cmake ninja pkg-config
+
+brew install \
+  sdl2 \
+  libzip libpng \
+  openssl@1.1 \
+  freetype \
+  icu4c \
+  zstd
+
+# Optional dependencies
+brew install \
+  flac libvorbis libogg \
+  ccache
+```
+
+<Warning>
+  OpenRCT2 is not yet compatible with OpenSSL 3. Use `openssl@1.1` specifically.
+</Warning>
+
+### Using OpenRCT2 Dependencies (Recommended)
+
+OpenRCT2 can automatically download and use pre-built universal (x86_64 + arm64) dependencies:
+
+```bash
+brew install cmake ninja
+```
+
+The CMake configuration will handle the rest when `MACOS_USE_DEPENDENCIES=ON` (default).
+
+## Building OpenRCT2
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/OpenRCT2/OpenRCT2.git
+    cd OpenRCT2
+    ```
+  </Step>
+
+  <Step title="Create a build directory">
+    ```bash
+    mkdir build
+    cd build
+    ```
+    
+    <Warning>
+      Do not build in the source directory. CMake will reject in-source builds.
+    </Warning>
+  </Step>
+
+  <Step title="Configure the build">
+    For a standard macOS app bundle:
+    
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ```
+    
+    This uses OpenRCT2's pre-built dependencies and creates `OpenRCT2.app`.
+    
+    To use Homebrew libraries instead:
+    
+    ```bash
+    cmake .. -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DMACOS_USE_DEPENDENCIES=OFF \
+      -DMACOS_BUNDLE=OFF
+    ```
+  </Step>
+
+  <Step title="Compile">
+    ```bash
+    ninja
+    ```
+    
+    The build will generate required asset files and create the OpenRCT2 binary or app bundle.
+  </Step>
+
+  <Step title="Install (optional)">
+    For app bundle builds, install to `/Applications`:
+    
+    ```bash
+    sudo ninja install
+    ```
+    
+    For non-bundle builds:
+    
+    ```bash
+    sudo ninja install
+    ```
+    
+    This installs to `/usr/local` by default.
+  </Step>
+</Steps>
+
+## Architecture-Specific Builds
+
+### Building for Apple Silicon (arm64)
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DARCH=arm64
+```
+
+### Building for Intel (x86_64)
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DARCH=x86_64
+```
+
+### Universal Binary (x86_64 + arm64)
+
+<Info>
+  When using `MACOS_USE_DEPENDENCIES=ON`, the pre-built libraries are already universal binaries.
+</Info>
+
+For Homebrew builds, you need to install universal libraries or build separately for each architecture.
+
+## Build Options
+
+### Creating an App Bundle
+
+By default, OpenRCT2 builds as `OpenRCT2.app`:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMACOS_USE_DEPENDENCIES=ON \
+  -DMACOS_BUNDLE=ON
+```
+
+The app bundle includes all dependencies and can be distributed as a standalone application.
+
+### Building CLI Executable Only
+
+To build a command-line executable instead of an app bundle:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMACOS_BUNDLE=OFF
+```
+
+### Headless Build (Server Only)
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DDISABLE_GUI=ON
+```
+
+### Building with Tests
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DWITH_TESTS=ON
+
+ninja
+
+# Run tests
+ctest --output-on-failure
+```
+
+## OpenRCT2 Dependencies Details
+
+When `MACOS_USE_DEPENDENCIES=ON` (default on macOS), CMake automatically downloads:
+
+- **Version**: v41
+- **File**: `openrct2-libs-v41-universal-macos-dylibs.zip`
+- **Source**: [OpenRCT2/Dependencies releases](https://github.com/OpenRCT2/Dependencies/releases/)
+- **Location**: Downloaded to `lib/macos/` in your source tree
+
+This includes universal binaries (x86_64 + arm64) of:
+
+- SDL2
+- libzip, zlib, libpng
+- OpenSSL 1.1
+- FreeType
+- ICU
+- FLAC, Vorbis, Ogg
+- And more
+
+The dependencies are cached after first download.
+
+## Running OpenRCT2
+
+### From App Bundle
+
+After building:
+
+```bash
+open OpenRCT2.app
+```
+
+Or from the command line:
+
+```bash
+open OpenRCT2.app --args --verbose
+```
+
+### From CLI Build
+
+```bash
+./openrct2
+```
+
+<Info>
+  On first run, OpenRCT2 will ask you to locate your RollerCoaster Tycoon 2 installation directory.
+</Info>
+
+## Using CCache
+
+CCache speeds up rebuilds significantly:
+
+```bash
+brew install ccache
+```
+
+CMake will automatically detect and use CCache. To disable:
+
+```bash
+cmake .. -G Ninja -DOPENRCT2_USE_CCACHE=OFF
+```
+
+## Troubleshooting
+
+### OpenSSL 3 Compatibility Issues
+
+<Warning>
+  OpenRCT2 is not yet compatible with OpenSSL 3 (the default in Homebrew).
+</Warning>
+
+If you're using Homebrew libraries:
+
+```bash
+brew install openssl@1.1
+
+export CMAKE_PREFIX_PATH="$(brew --prefix openssl@1.1)"
+
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMACOS_USE_DEPENDENCIES=OFF
+```
+
+Or use OpenRCT2's dependencies:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMACOS_USE_DEPENDENCIES=ON
+```
+
+### Library Not Found Errors
+
+If CMake can't find Homebrew libraries:
+
+```bash
+# Check Homebrew paths
+brew --prefix
+
+# Add to CMake prefix path
+export CMAKE_PREFIX_PATH="$(brew --prefix)"
+
+# Or specify library paths
+export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig"
+```
+
+### Xcode Command Line Tools Not Found
+
+```bash
+# Install if missing
+xcode-select --install
+
+# Reset path if needed
+sudo xcode-select --reset
+```
+
+### Architecture Mismatch
+
+If you get architecture-related errors:
+
+```bash
+# Check your system architecture
+uname -m
+
+# Explicitly set architecture
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DARCH=$(uname -m)
+```
+
+### Code Signing Issues
+
+For development builds, code signing is not required. If you encounter signing issues:
+
+```bash
+codesign --deep --force --verify --verbose --sign - OpenRCT2.app
+```
+
+### Bundle Fixup Failures
+
+If the app bundle fails to create properly, try a non-bundle build:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DMACOS_BUNDLE=OFF
+```
+
+## Deployment Target
+
+CMake automatically sets the macOS deployment target:
+
+- **x86_64**: macOS 10.14 (Mojave)
+- **arm64**: macOS 11.0 (Big Sur)
+
+To override:
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+```
+
+## Next Steps
+
+- [Building on Linux](/building/linux) - If you want to cross-compile or compare
+- [Contributing](/development/contributing) - Guidelines for contributing code
+- [Development Setup]() - Setting up your development environment

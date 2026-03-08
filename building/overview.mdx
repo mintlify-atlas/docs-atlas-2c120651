@@ -1,0 +1,191 @@
+---
+title: Building from Source
+description: Overview of building OpenRCT2 from source code
+---
+
+OpenRCT2 can be built from source on Linux, macOS, and Windows. Building from source allows you to:
+
+- Test the latest features before they are released
+- Contribute code changes to the project
+- Create custom builds with specific configurations
+- Debug issues in your development environment
+
+## Prerequisites
+
+Before building OpenRCT2, you'll need:
+
+### Build Tools
+
+- **CMake** 3.24 or later
+- **C++ Compiler** with C++20 support:
+  - GCC 12 or later (Linux)
+  - Clang 11 or later (Linux/macOS)
+  - MSVC 2022 or later (Windows)
+- **Ninja** or **Make** (build system)
+- **Git** (to clone the repository)
+
+### Required Dependencies
+
+OpenRCT2 requires several libraries to build:
+
+- **SDL2** (graphics and input)
+- **libzip** (≥1.0)
+- **zlib**
+- **libpng** (≥1.6)
+- **OpenSSL** (1.0.0 or later)
+- **libcurl** (for HTTP support)
+- **FreeType2** (for TTF font support)
+- **fontconfig** (Linux only, for TTF fonts)
+- **ICU** (internationalization)
+- **zstd** (compression)
+
+### Optional Dependencies
+
+- **FLAC** (for FLAC audio support)
+- **Vorbis** and **Ogg** (for OGG audio support)
+- **OpenGL** (for hardware rendering)
+- **discord-rpc** (for Discord Rich Presence)
+- **Google Benchmark** (for benchmarking, disabled by default)
+- **CCache** (to speed up recompilation)
+
+## Build Process
+
+The general build process follows these steps:
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/OpenRCT2/OpenRCT2.git
+    cd OpenRCT2
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install the required libraries for your platform (see platform-specific guides).
+  </Step>
+
+  <Step title="Create a build directory">
+    ```bash
+    mkdir build
+    cd build
+    ```
+    
+    <Warning>
+      Building in-source is not supported. Always create a separate build directory.
+    </Warning>
+  </Step>
+
+  <Step title="Configure with CMake">
+    ```bash
+    cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+    ```
+  </Step>
+
+  <Step title="Build the project">
+    ```bash
+    ninja
+    ```
+  </Step>
+
+  <Step title="Install (optional)">
+    ```bash
+    ninja install
+    ```
+  </Step>
+</Steps>
+
+## Build Options
+
+CMake provides several options to customize your build:
+
+| Option | Description | Default |
+|--------|-------------|:-------:|
+| `CMAKE_BUILD_TYPE` | Build type (Debug, Release, RelWithDebInfo, MinSizeRel) | Debug |
+| `DISABLE_GUI` | Build headless only (no GUI) | OFF |
+| `DISABLE_NETWORK` | Disable multiplayer functionality | OFF |
+| `DISABLE_HTTP` | Disable HTTP support | OFF |
+| `DISABLE_TTF` | Disable TrueType font support | OFF |
+| `DISABLE_OPENGL` | Disable OpenGL support | OFF |
+| `DISABLE_FLAC` | Disable FLAC audio support | OFF |
+| `DISABLE_VORBIS` | Disable OGG/Vorbis audio support | OFF |
+| `ENABLE_SCRIPTING` | Enable plugin/script support | ON |
+| `PORTABLE` | Create a portable build | OFF |
+| `WITH_TESTS` | Build unit tests | OFF |
+| `OPENRCT2_USE_CCACHE` | Use CCache for faster rebuilds | ON |
+
+### Example: Building with custom options
+
+```bash
+cmake .. -G Ninja \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DWITH_TESTS=ON \
+  -DDISABLE_DISCORD_RPC=ON
+```
+
+## Platform-Specific Guides
+
+Choose your platform for detailed build instructions:
+
+<CardGroup cols={2}>
+  <Card title="Linux" icon="linux" href="/building/linux">
+    Build on Ubuntu, Debian, Fedora, Arch, and other distributions
+  </Card>
+  
+  <Card title="macOS" icon="apple" href="/building/macos">
+    Build on macOS using CMake and Homebrew dependencies
+  </Card>
+  
+  <Card title="Windows" icon="windows" href="/building/windows">
+    Build on Windows using Visual Studio and vcpkg
+  </Card>
+  
+  <Card title="WSL" icon="ubuntu" href="/building/wsl">
+    Build on Windows Subsystem for Linux
+  </Card>
+  
+  <Card title="MSYS2" icon="terminal" href="/building/msys2">
+    Build on Windows using MSYS2 MinGW
+  </Card>
+</CardGroup>
+
+## Compiler Requirements
+
+<Warning>
+  **GCC 12+ is required.** Older versions of GCC are known to fail compilation.
+</Warning>
+
+The project requires C++20 support:
+
+- **GCC**: Version 12.0 or later
+- **Clang**: Version 11.0 or later  
+- **MSVC**: Visual Studio 2022 or later
+- **Apple Clang**: Xcode 13 or later
+
+## Common Build Issues
+
+### CMakeCache.txt already exists
+
+If you see an error about building in-source:
+
+```bash
+rm -rf CMakeCache.txt CMakeFiles/
+mkdir build && cd build
+cmake ..
+```
+
+### Missing dependencies
+
+If CMake reports missing dependencies, install them using your platform's package manager before running CMake again.
+
+### Linker errors with OpenSSL
+
+On macOS, if you encounter OpenSSL linking issues:
+
+```bash
+brew install openssl@1.1
+export CMAKE_PREFIX_PATH="$(brew --prefix openssl@1.1)"
+```
+
+## Next Steps
+
+After building OpenRCT2, you'll need the original RollerCoaster Tycoon 2 game files to run it. See the [Installation Guide](/installation) for details on setting up the game data.

@@ -1,0 +1,254 @@
+---
+title: Scenario API
+description: Scenario APIs for objectives, settings, and scenario information
+---
+
+The `scenario` object provides access to scenario information, objectives, and completion status.
+
+## Properties
+
+<ResponseField name="name" type="string">
+  The name of the scenario (not necessarily the name of the park).
+  ```javascript
+  console.log(`Scenario: ${scenario.name}`);
+  scenario.name = 'My Custom Scenario';
+  ```
+</ResponseField>
+
+<ResponseField name="details" type="string">
+  The description of the scenario, shown above the scenario objective.
+  ```javascript
+  console.log(`Description: ${scenario.details}`);
+  scenario.details = 'Build an amazing theme park!';
+  ```
+</ResponseField>
+
+<ResponseField name="filename" type="string">
+  The filename of the scenario being played. Used to match completion scores with scenario files.
+  ```javascript
+  console.log(`Filename: ${scenario.filename}`);
+  ```
+</ResponseField>
+
+<ResponseField name="completedBy" type="string">
+  The entered player name if the scenario is complete.
+  ```javascript
+  if (scenario.completedBy) {
+    console.log(`Completed by: ${scenario.completedBy}`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="completedCompanyValue" type="number | undefined">
+  The company value when the scenario was completed.
+  ```javascript
+  if (scenario.completedCompanyValue) {
+    console.log(`Completion value: ${scenario.completedCompanyValue}`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="status" type="ScenarioStatus">
+  The current status of the scenario:
+  - `"inProgress"` - Scenario is in progress
+  - `"completed"` - Scenario has been completed
+  - `"failed"` - Scenario has been failed
+  
+  ```javascript
+  if (scenario.status === 'completed') {
+    console.log('Scenario completed!');
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="companyValueRecord" type="number">
+  The current highest recorded company value.
+  ```javascript
+  console.log(`Record company value: ${scenario.companyValueRecord}`);
+  ```
+</ResponseField>
+
+<ResponseField name="parkRatingWarningDays" type="number">
+  The number of consecutive days the park rating has been under the threshold.
+  This resets when the park rating rises above the threshold again.
+  ```javascript
+  if (scenario.parkRatingWarningDays > 0) {
+    console.log(`Warning days: ${scenario.parkRatingWarningDays}`);
+  }
+  ```
+</ResponseField>
+
+## Scenario Objective
+
+<ResponseField name="objective" type="ScenarioObjective">
+  The criteria required to complete the scenario.
+</ResponseField>
+
+<Expandable title="Objective Properties">
+  <ResponseField name="type" type="ScenarioObjectiveType">
+    The objective type:
+    - `"none"` - No objective
+    - `"guestsBy"` - Have X guests by year Y
+    - `"parkValueBy"` - Have park value of X by year Y
+    - `"haveFun"` - Have fun (no specific goal)
+    - `"buildTheBest"` - Build the best ride
+    - `"10Rollercoasters"` - Build 10 roller coasters
+    - `"guestsAndRating"` - Have X guests and park rating Y
+    - `"monthlyRideIncome"` - Have monthly ride income of X
+    - `"10RollercoastersLength"` - Build 10 coasters of length X
+    - `"finish5Rollercoasters"` - Finish 5 coasters with excitement X
+    - `"repayLoanAndParkValue"` - Repay loan and achieve park value X
+    - `"monthlyFoodIncome"` - Have monthly food income of X
+  </ResponseField>
+  <ResponseField name="guests" type="number">
+    The required number of guests.
+  </ResponseField>
+  <ResponseField name="year" type="number">
+    The year the objective must be completed by.
+  </ResponseField>
+  <ResponseField name="length" type="number">
+    The minimum length required for each rollercoaster.
+  </ResponseField>
+  <ResponseField name="excitement" type="number">
+    The minimum excitement rating required for each rollercoaster.
+  </ResponseField>
+  <ResponseField name="parkValue" type="number">
+    The minimum park value required.
+  </ResponseField>
+  <ResponseField name="monthlyIncome" type="number">
+    The minimum monthly income from rides or food.
+  </ResponseField>
+</Expandable>
+
+```javascript
+const obj = scenario.objective;
+console.log(`Objective type: ${obj.type}`);
+
+if (obj.type === 'guestsBy') {
+  console.log(`Goal: Have ${obj.guests} guests by year ${obj.year}`);
+} else if (obj.type === 'parkValueBy') {
+  console.log(`Goal: Achieve park value of ${obj.parkValue} by year ${obj.year}`);
+} else if (obj.type === 'monthlyRideIncome') {
+  console.log(`Goal: Achieve monthly ride income of ${obj.monthlyIncome}`);
+}
+```
+
+## Usage Examples
+
+### Check Objective Progress
+
+```javascript
+function checkObjectiveProgress() {
+  const obj = scenario.objective;
+  
+  if (obj.type === 'guestsBy') {
+    const progress = (park.guests / obj.guests * 100).toFixed(1);
+    console.log(`Guest Progress: ${park.guests}/${obj.guests} (${progress}%)`);
+    
+    const yearsRemaining = obj.year - date.year;
+    console.log(`Years remaining: ${yearsRemaining}`);
+  } else if (obj.type === 'parkValueBy') {
+    const progress = (park.value / obj.parkValue * 100).toFixed(1);
+    console.log(`Park Value Progress: ${park.value}/${obj.parkValue} (${progress}%)`);
+  }
+}
+```
+
+### Monitor Scenario Status
+
+```javascript
+context.subscribe('interval.day', () => {
+  if (scenario.status === 'inProgress') {
+    checkObjectiveProgress();
+    
+    if (scenario.parkRatingWarningDays >= 3) {
+      console.log('WARNING: Park rating is low!');
+    }
+  } else if (scenario.status === 'completed') {
+    console.log('Congratulations! Scenario completed!');
+    console.log(`Completed by: ${scenario.completedBy}`);
+    console.log(`Final value: ${scenario.completedCompanyValue}`);
+  }
+});
+```
+
+### Display Objective Information
+
+```javascript
+function displayObjective() {
+  console.log('=== Scenario Objective ===');
+  console.log(`Scenario: ${scenario.name}`);
+  console.log(`Status: ${scenario.status}`);
+  
+  const obj = scenario.objective;
+  
+  switch (obj.type) {
+    case 'guestsBy':
+      console.log(`Have ${obj.guests} guests by October, Year ${obj.year}`);
+      break;
+    case 'parkValueBy':
+      console.log(`Achieve park value of £${obj.parkValue / 10} by October, Year ${obj.year}`);
+      break;
+    case '10Rollercoasters':
+      console.log('Have 10 different roller coasters operating');
+      break;
+    case 'monthlyRideIncome':
+      console.log(`Achieve monthly ride income of £${obj.monthlyIncome / 10}`);
+      break;
+    case 'haveFun':
+      console.log('Have fun!');
+      break;
+  }
+}
+```
+
+### Create Custom Objective Tracker
+
+```javascript
+let lastCheck = 0;
+
+context.subscribe('interval.day', () => {
+  const now = date.monthsElapsed;
+  
+  // Check progress every month
+  if (now > lastCheck) {
+    lastCheck = now;
+    
+    const obj = scenario.objective;
+    
+    if (obj.type === 'guestsBy') {
+      const percentComplete = (park.guests / obj.guests * 100).toFixed(1);
+      const monthsRemaining = (obj.year - date.year) * 8 - date.month;
+      
+      park.postMessage({
+        type: 'guests',
+        text: `Objective: ${percentComplete}% (${monthsRemaining} months left)`
+      });
+    }
+  }
+});
+```
+
+### Scenario Completion Handler
+
+```javascript
+let wasCompleted = false;
+
+context.subscribe('interval.tick', () => {
+  if (!wasCompleted && scenario.status === 'completed') {
+    wasCompleted = true;
+    
+    console.log('=== SCENARIO COMPLETED ===');
+    console.log(`Scenario: ${scenario.name}`);
+    console.log(`Completed by: ${scenario.completedBy}`);
+    console.log(`Company value: £${scenario.completedCompanyValue / 10}`);
+    console.log(`Record value: £${scenario.companyValueRecord / 10}`);
+    
+    // Celebrate!
+    park.postMessage({
+      type: 'award',
+      text: 'Scenario completed! Congratulations!'
+    });
+  }
+});
+```

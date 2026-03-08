@@ -1,0 +1,344 @@
+---
+title: Entity System
+description: Overview of the entity system in OpenRCT2
+---
+
+Entities are objects on the map that can move and have sub-tile coordinates, such as guests, staff, vehicles, and various effects.
+
+## Entity Types
+
+OpenRCT2 supports the following entity types:
+
+- `"guest"` - Park guests
+- `"staff"` - Staff members (handyman, mechanic, security, entertainer)
+- `"car"` - Ride vehicles
+- `"litter"` - Litter objects
+- `"balloon"` - Balloon entities
+- `"money_effect"` - Money effect animations
+- `"crash_splash"` - Crash splash effects
+- `"crashed_vehicle_particle"` - Crash particle effects
+- `"duck"` - Duck entities
+- `"explosion_cloud"` - Explosion cloud effects
+- `"explosion_flare"` - Explosion flare effects
+- `"jumping_fountain_water"` - Water fountain effects
+- `"jumping_fountain_snow"` - Snow fountain effects
+- `"steam_particle"` - Steam particle effects
+
+## Base Entity Properties
+
+All entities share these common properties:
+
+<ResponseField name="id" type="number | null" readonly>
+  The entity index within the entity list. Returns null for invalid entities.
+  ```javascript
+  console.log(`Entity ID: ${entity.id}`);
+  ```
+</ResponseField>
+
+<ResponseField name="type" type="EntityType" readonly>
+  The type of entity (guest, staff, car, etc.).
+  ```javascript
+  console.log(`Entity type: ${entity.type}`);
+  ```
+</ResponseField>
+
+<ResponseField name="x" type="number">
+  The x-coordinate of the entity in game units.
+  ```javascript
+  entity.x = 1024; // Move entity
+  ```
+</ResponseField>
+
+<ResponseField name="y" type="number">
+  The y-coordinate of the entity in game units.
+  ```javascript
+  entity.y = 2048;
+  ```
+</ResponseField>
+
+<ResponseField name="z" type="number">
+  The z-coordinate of the entity in game units.
+  ```javascript
+  entity.z = 32;
+  ```
+</ResponseField>
+
+## Methods
+
+### remove()
+
+Removes the entity from the map.
+
+<Warning>
+Removing vehicles and peeps that are on rides is currently unsupported.
+</Warning>
+
+```javascript
+const entity = map.getEntity(42);
+if (entity) {
+  entity.remove();
+  console.log('Entity removed');
+}
+```
+
+## Working with Entities
+
+### Get All Entities
+
+```javascript
+// Get all guests
+const guests = map.getAllEntities('guest');
+console.log(`Total guests: ${guests.length}`);
+
+// Get all staff
+const staff = map.getAllEntities('staff');
+console.log(`Total staff: ${staff.length}`);
+
+// Get all vehicles
+const vehicles = map.getAllEntities('car');
+console.log(`Vehicles on track: ${vehicles.length}`);
+```
+
+### Get Entity by ID
+
+```javascript
+const entity = map.getEntity(100);
+if (entity) {
+  console.log(`Found ${entity.type} at (${entity.x}, ${entity.y}, ${entity.z})`);
+}
+```
+
+### Get Entities on a Tile
+
+```javascript
+const guestsOnTile = map.getAllEntitiesOnTile('guest', { x: 64, y: 64 });
+console.log(`Guests at tile: ${guestsOnTile.length}`);
+
+const litterOnTile = map.getAllEntitiesOnTile('litter', { x: 32, y: 32 });
+if (litterOnTile.length > 0) {
+  console.log('Litter detected, send handyman!');
+}
+```
+
+### Create Entities
+
+```javascript
+// Create a balloon
+const balloon = map.createEntity('balloon', {
+  x: 1024,
+  y: 1024,
+  z: 32,
+  colour: 0
+});
+
+// Create litter
+const litter = map.createEntity('litter', {
+  x: 2048,
+  y: 2048,
+  z: 16,
+  litterType: 'empty_can'
+});
+```
+
+## Entity Iteration
+
+### Find Specific Entities
+
+```javascript
+// Find all happy guests
+const happyGuests = map.getAllEntities('guest')
+  .filter(guest => guest.happiness > 200);
+
+console.log(`Happy guests: ${happyGuests.length}`);
+
+// Find mechanics near a ride
+function findNearbyMechanics(x, y, radius) {
+  const staff = map.getAllEntities('staff');
+  return staff.filter(member => {
+    if (member.staffType !== 'mechanic') return false;
+    
+    const dx = member.x - x;
+    const dy = member.y - y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    return distance <= radius;
+  });
+}
+```
+
+### Count Entities by Type
+
+```javascript
+function countEntitiesByType() {
+  const counts = {
+    guests: map.getAllEntities('guest').length,
+    staff: map.getAllEntities('staff').length,
+    vehicles: map.getAllEntities('car').length,
+    litter: map.getAllEntities('litter').length,
+    balloons: map.getAllEntities('balloon').length
+  };
+  
+  console.log('Entity counts:', counts);
+  return counts;
+}
+```
+
+## Entity Positioning
+
+### Distance Calculation
+
+```javascript
+function getDistance(entity1, entity2) {
+  const dx = entity1.x - entity2.x;
+  const dy = entity1.y - entity2.y;
+  const dz = entity1.z - entity2.z;
+  
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+function getDistance2D(entity1, entity2) {
+  const dx = entity1.x - entity2.x;
+  const dy = entity1.y - entity2.y;
+  
+  return Math.sqrt(dx * dx + dy * dy);
+}
+```
+
+### Find Nearest Entity
+
+```javascript
+function findNearestEntity(target, entities) {
+  let nearest = null;
+  let minDistance = Infinity;
+  
+  entities.forEach(entity => {
+    const distance = getDistance2D(target, entity);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearest = entity;
+    }
+  });
+  
+  return { entity: nearest, distance: minDistance };
+}
+
+// Find nearest staff to a location
+const staff = map.getAllEntities('staff');
+const result = findNearestEntity({ x: 1024, y: 1024, z: 0 }, staff);
+if (result.entity) {
+  console.log(`Nearest staff: ${result.entity.name} (${result.distance} units away)`);
+}
+```
+
+## Entity Monitoring
+
+### Track Entity Count Changes
+
+```javascript
+let lastGuestCount = 0;
+
+context.subscribe('interval.tick', () => {
+  const currentCount = map.getAllEntities('guest').length;
+  
+  if (currentCount > lastGuestCount) {
+    console.log(`Guest entered park (${currentCount})`);
+  } else if (currentCount < lastGuestCount) {
+    console.log(`Guest left park (${currentCount})`);
+  }
+  
+  lastGuestCount = currentCount;
+});
+```
+
+### Monitor Entity Positions
+
+```javascript
+// Track guest movement in a specific area
+function monitorArea(x1, y1, x2, y2) {
+  context.subscribe('interval.tick', () => {
+    const guests = map.getAllEntities('guest');
+    const inArea = guests.filter(guest => 
+      guest.x >= x1 && guest.x <= x2 &&
+      guest.y >= y1 && guest.y <= y2
+    );
+    
+    if (inArea.length > 0) {
+      console.log(`${inArea.length} guests in monitored area`);
+    }
+  });
+}
+```
+
+## Specialized Entities
+
+For detailed information about specific entity types, see:
+
+- [Guests](/api/guests) - Guest entity API
+- [Staff](/api/staff) - Staff entity API  
+- [Rides](/api/rides) - Ride and vehicle entities
+
+## Performance Considerations
+
+<Note>
+**Entity Queries**: Calling `getAllEntities()` frequently can impact performance. Cache results when possible or use event-driven approaches.
+</Note>
+
+```javascript
+// Bad: Query every tick
+context.subscribe('interval.tick', () => {
+  const guests = map.getAllEntities('guest'); // Expensive!
+  // ... process guests
+});
+
+// Better: Query less frequently
+let guestCache = [];
+let cacheAge = 0;
+
+context.subscribe('interval.tick', () => {
+  cacheAge++;
+  
+  // Refresh cache every 40 ticks (1 second)
+  if (cacheAge >= 40) {
+    guestCache = map.getAllEntities('guest');
+    cacheAge = 0;
+  }
+  
+  // Use cached data
+  // ... process guestCache
+});
+```
+
+## Entity Lifecycle
+
+### Entity Creation Events
+
+```javascript
+// Monitor guest generation
+context.subscribe('guest.generation', (e) => {
+  const guest = map.getEntity(e.id);
+  if (guest) {
+    console.log(`New guest: ${guest.name}`);
+  }
+});
+```
+
+### Entity Removal
+
+```javascript
+// Remove all litter
+function cleanAllLitter() {
+  const litter = map.getAllEntities('litter');
+  litter.forEach(item => item.remove());
+  console.log(`Removed ${litter.length} litter items`);
+}
+
+// Remove old balloons
+function removeOldBalloons() {
+  const balloons = map.getAllEntities('balloon');
+  balloons.forEach(balloon => {
+    if (balloon.z > 1000) { // High altitude
+      balloon.remove();
+    }
+  });
+}
+```

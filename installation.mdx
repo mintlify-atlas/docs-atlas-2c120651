@@ -1,0 +1,388 @@
+---
+title: Installation
+description: Install OpenRCT2 on Windows, Linux, macOS, or Android
+---
+
+## Prerequisites
+
+<Warning>
+  OpenRCT2 requires original files of RollerCoaster Tycoon 2 to play. You must own a copy of RCT2.
+</Warning>
+
+Before installing OpenRCT2, purchase RollerCoaster Tycoon 2 from:
+
+<CardGroup cols={2}>
+  <Card title="Steam" icon="steam" href="https://store.steampowered.com/app/285330/RollerCoaster_Tycoon_2_Triple_Thrill_Pack/">
+    RollerCoaster Tycoon 2: Triple Thrill Pack
+  </Card>
+  <Card title="GOG.com" icon="gamepad" href="https://www.gog.com/game/rollercoaster_tycoon_2">
+    DRM-free version with offline installers
+  </Card>
+</CardGroup>
+
+## Choose Your Installation Method
+
+<Tabs>
+  <Tab title="Windows">
+    ### Windows Installation
+
+    <Steps>
+      <Step title="Download OpenRCT2">
+        Visit [openrct2.io/download](https://openrct2.io/download) and choose:
+        
+        - **Latest Release**: Stable version recommended for most users
+        - **Latest Development Build**: Cutting-edge features and bug fixes
+        
+        Download either the installer (`.exe`) or portable build (`.zip`).
+      </Step>
+
+      <Step title="Install the Game">
+        **Using the Installer:**
+        
+        1. Run the downloaded `.exe` file
+        2. Follow the installation wizard
+        3. Choose your installation directory
+        4. Complete the installation
+        
+        **Using Portable Build:**
+        
+        1. Extract the `.zip` file to a directory of your choice
+        2. No installation required - run `openrct2.exe` directly
+      </Step>
+
+      <Step title="Alternative: Use the Launcher">
+        For automatic updates, download the [OpenRCT2 Launcher](https://openrct2.io/download/launcher):
+        
+        1. Download and install the launcher
+        2. The launcher will automatically update your game
+        3. Always have the latest version without manual downloads
+      </Step>
+
+      <Step title="First Launch">
+        When you start OpenRCT2 for the first time, it will search for RCT2 files in common locations:
+        
+        - `C:\Program Files\Infogrames\RollerCoaster Tycoon 2`
+        - `C:\Program Files (x86)\Infogrames\RollerCoaster Tycoon 2`
+        - `C:\Program Files\Atari\RollerCoaster Tycoon 2`
+        - `C:\GOG Games\RollerCoaster Tycoon 2 Triple Thrill Pack`
+        - `C:\Program Files\Steam\steamapps\common\Rollercoaster Tycoon 2`
+        - `C:\Program Files (x86)\Steam\steamapps\common\Rollercoaster Tycoon 2`
+        
+        If not found automatically, you'll be prompted to specify the directory manually.
+      </Step>
+    </Steps>
+
+    <Note>
+      If you wish to use Steam Overlay or capture the game for video recording/streaming, enable **hardware display** in the options menu. This will render graphics using DirectX or OpenGL.
+    </Note>
+  </Tab>
+
+  <Tab title="Linux">
+    ### Linux Installation
+
+    <Steps>
+      <Step title="Choose Your Installation Method">
+        Linux users have several options. Choose the method that works best for your distribution.
+      </Step>
+
+      <Step title="Flatpak (Recommended)">
+        The recommended method for most Linux distributions:
+        
+        ```bash
+        flatpak install flathub io.openrct2.OpenRCT2
+        ```
+        
+        Then launch with:
+        
+        ```bash
+        flatpak run io.openrct2.OpenRCT2
+        ```
+        
+        <Note>
+          When downloading from [Flathub](https://flathub.org/apps/details/io.openrct2.OpenRCT2), you'll always receive the latest updates regardless of your Linux distribution.
+        </Note>
+      </Step>
+
+      <Step title="Distribution Packages">
+        Many distributions offer native packages:
+        
+        <CodeGroup>
+          ```bash Arch Linux
+          # Latest release from official repositories
+          sudo pacman -S openrct2
+          
+          # Or development version from AUR
+          yay -S openrct2-git
+          ```
+          
+          ```bash Ubuntu PPA
+          # Nightly builds
+          sudo add-apt-repository ppa:openrct2/nightly
+          sudo apt update
+          sudo apt install openrct2
+          ```
+          
+          ```bash Gentoo
+          sudo emerge games-simulation/openrct2
+          ```
+          
+          ```bash NixOS
+          nix-env -iA nixpkgs.openrct2
+          ```
+          
+          ```bash openSUSE
+          # Add the games repository
+          sudo zypper addrepo https://download.opensuse.org/repositories/games/openSUSE_Tumbleweed/games.repo
+          sudo zypper refresh
+          sudo zypper install openrct2
+          ```
+        </CodeGroup>
+      </Step>
+
+      <Step title="OpenRCT2 Launcher">
+        For automatic updates, use the [OpenRCT2 Launcher](https://openrct2.io/download/launcher):
+        
+        1. Download the launcher for Linux
+        2. Make it executable: `chmod +x openrct2-launcher`
+        3. Run the launcher to manage your installation
+      </Step>
+
+      <Step title="Manual Download">
+        Download from [openrct2.io/download](https://openrct2.io/download):
+        
+        1. Download the latest release or development build
+        2. Extract the archive
+        3. Run the `openrct2` binary
+      </Step>
+    </Steps>
+
+    ### FreeBSD
+    
+    ```bash
+    pkg install openrct2
+    ```
+  </Tab>
+
+  <Tab title="macOS">
+    ### macOS Installation
+
+    <Steps>
+      <Step title="System Requirements">
+        - macOS 10.13 (High Sierra) or higher
+        - Intel or Apple Silicon (M1/M2) processor
+      </Step>
+
+      <Step title="Download OpenRCT2">
+        Visit [openrct2.io/download](https://openrct2.io/download) and download:
+        
+        - **Latest Release**: Stable version for most users
+        - **Latest Development Build**: Latest features and fixes
+      </Step>
+
+      <Step title="Install the Application">
+        1. Download the `.zip` file for macOS
+        2. Extract the archive
+        3. Drag `OpenRCT2.app` to your Applications folder
+        4. Right-click and select "Open" the first time (security requirement)
+      </Step>
+
+      <Step title="Grant Permissions">
+        macOS may ask for permissions to access files. Grant these permissions so OpenRCT2 can:
+        
+        - Access your Documents folder
+        - Read RCT2 game files
+        - Save your parks and configuration
+      </Step>
+
+      <Step title="Locate RCT2 Files">
+        On first launch, OpenRCT2 will ask you to locate your RCT2 installation:
+        
+        - If you have RCT2 from Steam, navigate to your Steam library folder
+        - If you have RCT2 from GOG, navigate to where you installed it
+        - Point OpenRCT2 to the folder containing the RCT2 data files
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Android">
+    ### Android Installation
+
+    <Steps>
+      <Step title="System Requirements">
+        - Android 5.0 (Lollipop) or higher
+        - ARM processor (most Android devices)
+        - At least 1 GB free storage
+      </Step>
+
+      <Step title="Download OpenRCT2">
+        Visit [openrct2.io/download](https://openrct2.io/download) on your Android device and download the latest Android build (`.apk` file).
+      </Step>
+
+      <Step title="Enable Unknown Sources">
+        To install the APK:
+        
+        1. Go to **Settings** > **Security**
+        2. Enable **Install from Unknown Sources** or **Allow from this source**
+        3. The exact location varies by Android version and device
+      </Step>
+
+      <Step title="Install the APK">
+        1. Open the downloaded `.apk` file
+        2. Tap **Install**
+        3. Wait for installation to complete
+        4. You can now disable "Unknown Sources" if desired
+      </Step>
+
+      <Step title="Copy RCT2 Files">
+        You need to copy RCT2 game files to your Android device:
+        
+        1. Connect your device to a computer
+        2. Copy the RCT2 data files from your PC installation
+        3. Place them in a folder on your device (e.g., `Downloads/RCT2`)
+        4. Launch OpenRCT2 and point it to this folder
+      </Step>
+    </Steps>
+
+    <Note>
+      Touch controls are optimized for mobile gameplay, but a stylus can provide more precision when building intricate parks.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Configuring RCT2 File Paths
+
+### Automatic Detection
+
+On Windows, OpenRCT2 automatically searches these locations for RCT2 files:
+
+- Infogrames installation directories
+- Atari installation directories  
+- GOG installation directories
+- Steam installation directories
+- The directory containing `openrct2.exe`
+
+### Manual Configuration
+
+If automatic detection fails:
+
+<Steps>
+  <Step title="Launch OpenRCT2">
+    Start OpenRCT2 for the first time. You'll see a dialog asking for the RCT2 path.
+  </Step>
+
+  <Step title="Browse to RCT2 Directory">
+    Click "Browse" and navigate to your RCT2 installation folder. This folder should contain files like:
+    
+    - `Data/g1.dat`
+    - `Data/CSS*.dat`
+    - `Scenarios/`
+    - `ObjData/`
+  </Step>
+
+  <Step title="Alternative: Edit config.ini">
+    You can manually edit the configuration file:
+    
+    **Windows:**
+    ```
+    %USERPROFILE%\Documents\OpenRCT2\config.ini
+    ```
+    
+    **Linux/macOS:**
+    ```
+    ~/.config/OpenRCT2/config.ini
+    ```
+    
+    Add or modify this line:
+    ```ini
+    rct2_path = "C:\\Path\\To\\RCT2"
+    ```
+  </Step>
+</Steps>
+
+## Using RCT1 Assets
+
+If you have the original RollerCoaster Tycoon and its expansion packs:
+
+<Note>
+  You can point OpenRCT2 to your RCT1 files to play original RCT1 scenarios and access RCT1 content. See the [wiki guide](https://github.com/OpenRCT2/OpenRCT2/wiki/Loading-RCT1-scenarios-and-data) for instructions.
+</Note>
+
+## Updating OpenRCT2
+
+<Tabs>
+  <Tab title="Launcher">
+    The OpenRCT2 Launcher automatically updates the game. Simply launch it and it will check for updates.
+  </Tab>
+
+  <Tab title="Flatpak">
+    ```bash
+    flatpak update io.openrct2.OpenRCT2
+    ```
+  </Tab>
+
+  <Tab title="Manual">
+    Download the latest version from [openrct2.io/download](https://openrct2.io/download) and install over your existing installation.
+  </Tab>
+</Tabs>
+
+## Display Settings
+
+OpenRCT2 supports DPI scaling in increments of 0.25. To configure:
+
+1. Launch OpenRCT2
+2. Open the **Options** menu
+3. Navigate to **Display** settings
+4. Adjust the **UI Scale** slider
+
+### Hardware Display Mode
+
+For better compatibility with recording software, Steam Overlay, or VSync:
+
+1. Open **Options** > **Display**
+2. Enable **Hardware Display**
+3. Choose between **DirectX** (Windows) or **OpenGL** (all platforms)
+
+<Note>
+  Hardware display mode still renders graphics on the CPU but displays pixel data using your GPU, which can enable vertical synchronization when "Uncap FPS" is enabled.
+</Note>
+
+## Troubleshooting
+
+### Verbose Mode
+
+If you encounter problems, run OpenRCT2 in verbose mode for detailed diagnostic logs:
+
+```bash
+openrct2 --verbose
+```
+
+This log can help identify issues and is useful when asking for help online.
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Game won't start">
+    - Verify RCT2 files are correctly located
+    - Check that all required RCT2 data files are present
+    - Try running with `--verbose` flag to see error messages
+  </Accordion>
+
+  <Accordion title="Can't find RCT2 installation">
+    - Manually specify the path in config.ini
+    - Ensure you're pointing to the root RCT2 directory, not a subdirectory
+    - Verify g1.dat exists in the Data folder
+  </Accordion>
+
+  <Accordion title="Performance issues">
+    - Try enabling hardware display mode
+    - Lower the UI scale if on a high-DPI display
+    - Disable day/night cycle if enabled
+    - Close other resource-intensive applications
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+  Now that you have OpenRCT2 installed, learn how to set up your first park and start playing!
+</Card>

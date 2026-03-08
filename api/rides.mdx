@@ -1,0 +1,505 @@
+---
+title: Ride API
+description: Ride and vehicle APIs for managing attractions in OpenRCT2
+---
+
+Rides are attractions in the park. Access them through the `map` object or by ID.
+
+## Accessing Rides
+
+```javascript
+// Get all rides
+const allRides = map.rides;
+
+// Get ride by ID
+const ride = map.getRide(0);
+
+// Get number of rides
+console.log(`Total rides: ${map.numRides}`);
+```
+
+## Basic Properties
+
+<ResponseField name="id" type="number" readonly>
+  The unique ID/index of the ride.
+  ```javascript
+  console.log(`Ride ID: ${ride.id}`);
+  ```
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The generated or custom name of the ride.
+  ```javascript
+  ride.name = 'Awesome Coaster';
+  console.log(`Ride: ${ride.name}`);
+  ```
+</ResponseField>
+
+<ResponseField name="type" type="number">
+  The type of the ride represented as the internal built-in ride type ID.
+  ```javascript
+  console.log(`Ride type: ${ride.type}`);
+  ```
+</ResponseField>
+
+<ResponseField name="classification" type="RideClassification" readonly>
+  Whether the ride is a ride, shop, or facility.
+  Can be: `"ride"`, `"stall"`, `"facility"`
+  ```javascript
+  if (ride.classification === 'ride') {
+    console.log('This is a ride attraction');
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="object" type="RideObject" readonly>
+  The object metadata for this ride.
+  ```javascript
+  console.log(`Object: ${ride.object.name}`);
+  console.log(`Description: ${ride.object.description}`);
+  ```
+</ResponseField>
+
+## Status
+
+<ResponseField name="status" type="RideStatus" readonly>
+  The current status of the ride.
+  Can be: `"closed"`, `"open"`, `"testing"`, `"simulating"`
+  ```javascript
+  console.log(`Status: ${ride.status}`);
+  ```
+</ResponseField>
+
+<ResponseField name="flags" type="number">
+  Various flags related to the operation of the ride.
+  ```javascript
+  console.log(`Flags: ${ride.flags}`);
+  ```
+</ResponseField>
+
+<ResponseField name="mode" type="number">
+  The operation mode of the ride.
+  ```javascript
+  ride.mode = 0; // Change operation mode
+  ```
+</ResponseField>
+
+<ResponseField name="departFlags" type="number">
+  Flags related to how trains depart.
+  ```javascript
+  ride.departFlags = 0;
+  ```
+</ResponseField>
+
+## Timing
+
+<ResponseField name="minimumWaitingTime" type="number">
+  The minimum time a train will wait at the station before departing.
+  ```javascript
+  ride.minimumWaitingTime = 10;
+  ```
+</ResponseField>
+
+<ResponseField name="maximumWaitingTime" type="number">
+  The maximum time a train will wait at the station before departing.
+  ```javascript
+  ride.maximumWaitingTime = 60;
+  ```
+</ResponseField>
+
+## Ratings
+
+<ResponseField name="excitement" type="number">
+  The excitement metric (2 decimal point fixed integer).
+  For example, `652` equals `6.52`.
+  ```javascript
+  console.log(`Excitement: ${(ride.excitement / 100).toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="intensity" type="number">
+  The intensity metric (2 decimal point fixed integer).
+  ```javascript
+  console.log(`Intensity: ${(ride.intensity / 100).toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="nausea" type="number">
+  The nausea metric (2 decimal point fixed integer).
+  ```javascript
+  console.log(`Nausea: ${(ride.nausea / 100).toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="satisfaction" type="number" readonly>
+  The satisfaction rating from 0 to 100.
+  ```javascript
+  console.log(`Satisfaction: ${ride.satisfaction}%`);
+  ```
+</ResponseField>
+
+## Financial
+
+<ResponseField name="price" type="number[]">
+  The admission price for the ride and the price of the on-ride photo, or the cost of each item of the stall.
+  ```javascript
+  ride.price[0] = 500; // Set ride price to £5.00
+  console.log(`Price: £${(ride.price[0] / 10).toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="runningCost" type="number">
+  The running cost of the ride billed every fortnight.
+  Multiply by 16 to get cost per hour (~1 year).
+  ```javascript
+  const yearCost = ride.runningCost * 16;
+  console.log(`Annual cost: £${(yearCost / 10).toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="totalProfit" type="number">
+  The total profit of the ride over its lifetime.
+  ```javascript
+  console.log(`Total profit: £${(ride.totalProfit / 10).toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="value" type="number">
+  The value of the ride.
+  ```javascript
+  console.log(`Value: £${(ride.value / 10).toFixed(2)}`);
+  ```
+</ResponseField>
+
+## Statistics
+
+<ResponseField name="totalCustomers" type="number">
+  The total number of customers the ride has served since it was built.
+  ```javascript
+  console.log(`Total customers: ${ride.totalCustomers}`);
+  ```
+</ResponseField>
+
+<ResponseField name="buildDate" type="number">
+  The date in months when the ride was built.
+  Subtract from `date.monthsElapsed` to get the age.
+  ```javascript
+  const ageInMonths = date.monthsElapsed - ride.buildDate;
+  console.log(`Age: ${ageInMonths} months`);
+  ```
+</ResponseField>
+
+<ResponseField name="age" type="number" readonly>
+  How old the ride is in months.
+  ```javascript
+  console.log(`Age: ${ride.age} months`);
+  ```
+</ResponseField>
+
+<ResponseField name="downtime" type="number" readonly>
+  The percentage of downtime from 0 to 100.
+  ```javascript
+  console.log(`Downtime: ${ride.downtime}%`);
+  ```
+</ResponseField>
+
+## Performance Metrics
+
+<ResponseField name="maxSpeed" type="number" readonly>
+  The max speed in miles per hour.
+  ```javascript
+  console.log(`Max speed: ${ride.maxSpeed} mph`);
+  ```
+</ResponseField>
+
+<ResponseField name="averageSpeed" type="number" readonly>
+  The average speed in miles per hour.
+  ```javascript
+  console.log(`Avg speed: ${ride.averageSpeed} mph`);
+  ```
+</ResponseField>
+
+<ResponseField name="rideTime" type="number" readonly>
+  The ride time in seconds.
+  ```javascript
+  const minutes = Math.floor(ride.rideTime / 60);
+  const seconds = ride.rideTime % 60;
+  console.log(`Ride time: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+  ```
+</ResponseField>
+
+<ResponseField name="rideLength" type="number" readonly>
+  Total length of the ride in meters.
+  Use `context.formatString('{LENGTH}', ride.rideLength)` to convert to localized units.
+  ```javascript
+  console.log(`Length: ${ride.rideLength}m`);
+  ```
+</ResponseField>
+
+<ResponseField name="maxPositiveVerticalGs" type="number" readonly>
+  The max positive vertical Gs.
+  ```javascript
+  console.log(`Max positive G: ${ride.maxPositiveVerticalGs.toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="maxNegativeVerticalGs" type="number" readonly>
+  The max negative vertical Gs.
+  ```javascript
+  console.log(`Max negative G: ${ride.maxNegativeVerticalGs.toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="maxLateralGs" type="number" readonly>
+  The max lateral Gs.
+  ```javascript
+  console.log(`Max lateral G: ${ride.maxLateralGs.toFixed(2)}`);
+  ```
+</ResponseField>
+
+<ResponseField name="totalAirTime" type="number" readonly>
+  The total airtime in seconds.
+  ```javascript
+  console.log(`Airtime: ${ride.totalAirTime}s`);
+  ```
+</ResponseField>
+
+<ResponseField name="numDrops" type="number" readonly>
+  The number of drops.
+  ```javascript
+  console.log(`Drops: ${ride.numDrops}`);
+  ```
+</ResponseField>
+
+<ResponseField name="numLiftHills" type="number" readonly>
+  The number of lift hills.
+  ```javascript
+  console.log(`Lift hills: ${ride.numLiftHills}`);
+  ```
+</ResponseField>
+
+<ResponseField name="highestDropHeight" type="number" readonly>
+  Highest drop height in height units.
+  Use `context.formatString('{HEIGHT}', ride.highestDropHeight)` to convert to meters/feet.
+  ```javascript
+  console.log(`Highest drop: ${ride.highestDropHeight} units`);
+  ```
+</ResponseField>
+
+## Chain Lift
+
+<ResponseField name="liftHillSpeed" type="number">
+  The currently set chain lift speed in miles per hour.
+  Use `context.formatString('{VELOCITY}', ride.liftHillSpeed)` for localized value.
+  ```javascript
+  ride.liftHillSpeed = 8; // Set to 8 mph
+  ```
+</ResponseField>
+
+<ResponseField name="maxLiftHillSpeed" type="number" readonly>
+  The max chain lift speed for this ride in mph.
+  ```javascript
+  console.log(`Max lift speed: ${ride.maxLiftHillSpeed} mph`);
+  ```
+</ResponseField>
+
+<ResponseField name="minLiftHillSpeed" type="number" readonly>
+  The min chain lift speed for this ride in mph.
+  ```javascript
+  console.log(`Min lift speed: ${ride.minLiftHillSpeed} mph`);
+  ```
+</ResponseField>
+
+## Vehicles
+
+<ResponseField name="vehicles" type="number[]" readonly>
+  The head vehicle IDs associated with the ride, one for each train.
+  ```javascript
+  console.log(`Trains: ${ride.vehicles.length}`);
+  ride.vehicles.forEach((vehicleId, i) => {
+    const vehicle = map.getEntity(vehicleId);
+    console.log(`Train ${i + 1}: ${vehicle.status}`);
+  });
+  ```
+</ResponseField>
+
+<ResponseField name="vehicleColours" type="VehicleColour[]">
+  The colour for each vehicle when the ride opens.
+  Modifying this won't change currently running trains.
+  ```javascript
+  ride.vehicleColours[0] = {
+    body: 10,
+    trim: 20,
+    tertiary: 30
+  };
+  ```
+</ResponseField>
+
+## Appearance
+
+<ResponseField name="colourSchemes" type="TrackColour[]">
+  The track colour schemes for the ride.
+  ```javascript
+  ride.colourSchemes[0] = {
+    main: 5,
+    additional: 10,
+    supports: 15
+  };
+  ```
+</ResponseField>
+
+<ResponseField name="stationStyle" type="number">
+  The style used for the station, entrance, and exit building.
+  ```javascript
+  ride.stationStyle = 0;
+  ```
+</ResponseField>
+
+<ResponseField name="music" type="number">
+  The music track to play at each station.
+  ```javascript
+  ride.music = 1;
+  ```
+</ResponseField>
+
+## Stations
+
+<ResponseField name="stations" type="RideStation[]" readonly>
+  Information about each station.
+  ```javascript
+  ride.stations.forEach((station, i) => {
+    console.log(`Station ${i + 1}:`);
+    console.log(`  Start: (${station.start.x}, ${station.start.y}, ${station.start.z})`);
+    console.log(`  Length: ${station.length}`);
+  });
+  ```
+</ResponseField>
+
+Each station has:
+- `start` - Start coordinates (CoordsXYZ)
+- `length` - Length of the station
+- `entrance` - Entrance coordinates and direction (CoordsXYZD)
+- `exit` - Exit coordinates and direction (CoordsXYZD)
+
+## Maintenance
+
+<ResponseField name="inspectionInterval" type="number">
+  How often the ride should be inspected by a mechanic.
+  ```javascript
+  ride.inspectionInterval = 2; // Inspect every 20 minutes
+  ```
+</ResponseField>
+
+<ResponseField name="breakdown" type="BreakdownType" readonly>
+  The current breakdown of the ride.
+  Can be: "brakes_failure", "control_failure", "doors_stuck_closed", "doors_stuck_open", "restraints_stuck_closed", "restraints_stuck_open", "safety_cut_out", "vehicle_malfunction"
+  ```javascript
+  if (ride.breakdown) {
+    console.log(`Breakdown: ${ride.breakdown}`);
+  }
+  ```
+</ResponseField>
+
+### setBreakdown()
+
+Sets a breakdown on a ride.
+
+<ParamField path="breakdown" type="BreakdownType" required>
+  The type of breakdown to set.
+</ParamField>
+
+```javascript
+ride.setBreakdown('brakes_failure');
+```
+
+### fixBreakdown()
+
+Fixes a ride and clears the breakdown.
+
+```javascript
+ride.fixBreakdown();
+console.log('Ride fixed!');
+```
+
+## Usage Examples
+
+### Ride Information Display
+
+```javascript
+function displayRideInfo(ride) {
+  console.log(`=== ${ride.name} ===`);
+  console.log(`Type: ${ride.classification}`);
+  console.log(`Status: ${ride.status}`);
+  console.log(`Ratings:`);
+  console.log(`  Excitement: ${(ride.excitement / 100).toFixed(2)}`);
+  console.log(`  Intensity: ${(ride.intensity / 100).toFixed(2)}`);
+  console.log(`  Nausea: ${(ride.nausea / 100).toFixed(2)}`);
+  console.log(`Satisfaction: ${ride.satisfaction}%`);
+  console.log(`Total Customers: ${ride.totalCustomers}`);
+  console.log(`Age: ${ride.age} months`);
+  console.log(`Value: £${(ride.value / 10).toFixed(2)}`);
+}
+```
+
+### Find Best Rides
+
+```javascript
+function findBestRides() {
+  const rides = map.rides
+    .filter(r => r.classification === 'ride')
+    .sort((a, b) => b.excitement - a.excitement);
+  
+  console.log('=== Top 5 Rides by Excitement ===');
+  rides.slice(0, 5).forEach((ride, i) => {
+    console.log(`${i + 1}. ${ride.name}: ${(ride.excitement / 100).toFixed(2)}`);
+  });
+}
+```
+
+### Auto-Fix Broken Rides
+
+```javascript
+context.subscribe('interval.day', () => {
+  map.rides.forEach(ride => {
+    if (ride.breakdown) {
+      console.log(`Auto-fixing ${ride.name}`);
+      ride.fixBreakdown();
+    }
+  });
+});
+```
+
+### Profit Report
+
+```javascript
+function profitReport() {
+  const rides = map.rides.filter(r => r.classification === 'ride');
+  
+  let totalProfit = 0;
+  rides.forEach(ride => {
+    totalProfit += ride.totalProfit;
+  });
+  
+  console.log('=== Profit Report ===');
+  console.log(`Total profit: £${(totalProfit / 10).toFixed(2)}`);
+  
+  const sorted = rides.sort((a, b) => b.totalProfit - a.totalProfit);
+  sorted.slice(0, 5).forEach(ride => {
+    console.log(`${ride.name}: £${(ride.totalProfit / 10).toFixed(2)}`);
+  });
+}
+```
+
+### Set All Ride Prices
+
+```javascript
+function setPrices() {
+  map.rides.forEach(ride => {
+    if (ride.classification === 'ride') {
+      const excitement = ride.excitement / 100;
+      ride.price[0] = Math.floor(excitement * 100); // Price based on excitement
+      console.log(`${ride.name}: £${(ride.price[0] / 10).toFixed(2)}`);
+    }
+  });
+}
+```

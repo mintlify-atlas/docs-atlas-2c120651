@@ -1,0 +1,371 @@
+---
+title: Map API
+description: Map APIs for tile manipulation, rides, and entities in OpenRCT2
+---
+
+The `map` object provides access to the game map, including tiles, rides, and entities.
+
+## Properties
+
+<ResponseField name="size" type="CoordsXY" readonly>
+  The size of the map in tiles.
+  ```javascript
+  console.log(`Map size: ${map.size.x} x ${map.size.y}`);
+  ```
+</ResponseField>
+
+<ResponseField name="numRides" type="number" readonly>
+  The total number of rides in the park.
+  ```javascript
+  console.log(`Total rides: ${map.numRides}`);
+  ```
+</ResponseField>
+
+<ResponseField name="numEntities" type="number" readonly>
+  The total number of entities on the map.
+  ```javascript
+  console.log(`Total entities: ${map.numEntities}`);
+  ```
+</ResponseField>
+
+<ResponseField name="rides" type="Ride[]" readonly>
+  An array of all rides in the park.
+  ```javascript
+  map.rides.forEach(ride => {
+    console.log(`${ride.name}: ${ride.excitement}`);
+  });
+  ```
+</ResponseField>
+
+## Ride Methods
+
+### getRide()
+
+Gets a ride by its ID.
+
+<ParamField path="id" type="number" required>
+  The ride ID.
+</ParamField>
+
+```javascript
+const ride = map.getRide(0);
+if (ride) {
+  console.log(`Ride: ${ride.name}`);
+  console.log(`Status: ${ride.status}`);
+  console.log(`Excitement: ${ride.excitement}`);
+}
+```
+
+## Tile Methods
+
+### getTile()
+
+Gets a tile at the specified coordinates.
+
+<ParamField path="x" type="number" required>
+  The x coordinate in tiles.
+</ParamField>
+
+<ParamField path="y" type="number" required>
+  The y coordinate in tiles.
+</ParamField>
+
+```javascript
+const tile = map.getTile(32, 32);
+console.log(`Elements on tile: ${tile.numElements}`);
+
+tile.elements.forEach((element, i) => {
+  console.log(`Element ${i}: ${element.type}`);
+});
+```
+
+<Tabs>
+  <Tab title="Surface Elements">
+    ```javascript
+    const tile = map.getTile(x, y);
+    const surface = tile.elements.find(e => e.type === 'surface');
+    
+    if (surface) {
+      console.log('Height:', surface.baseHeight);
+      console.log('Slope:', surface.slope);
+      console.log('Surface style:', surface.surfaceStyle);
+      console.log('Has ownership:', surface.hasOwnership);
+    }
+    ```
+  </Tab>
+  <Tab title="Track Elements">
+    ```javascript
+    const tile = map.getTile(x, y);
+    const tracks = tile.elements.filter(e => e.type === 'track');
+    
+    tracks.forEach(track => {
+      const ride = map.getRide(track.ride);
+      console.log(`Track for: ${ride.name}`);
+      console.log('Track type:', track.trackType);
+      console.log('Direction:', track.direction);
+    });
+    ```
+  </Tab>
+  <Tab title="Scenery Elements">
+    ```javascript
+    const tile = map.getTile(x, y);
+    const scenery = tile.elements.filter(e => 
+      e.type === 'small_scenery' || 
+      e.type === 'large_scenery'
+    );
+    
+    console.log(`Scenery count: ${scenery.length}`);
+    ```
+  </Tab>
+</Tabs>
+
+## Entity Methods
+
+### getEntity()
+
+Gets an entity by its ID.
+
+<ParamField path="id" type="number" required>
+  The entity ID.
+</ParamField>
+
+```javascript
+const entity = map.getEntity(42);
+if (entity) {
+  console.log(`Entity type: ${entity.type}`);
+  console.log(`Position: (${entity.x}, ${entity.y}, ${entity.z})`);
+}
+```
+
+### getAllEntities()
+
+Gets all entities of a specific type.
+
+<ParamField path="type" type="EntityType" required>
+  The entity type: "guest", "staff", "car", "litter", "balloon", "money_effect"
+</ParamField>
+
+```javascript
+// Get all guests
+const guests = map.getAllEntities('guest');
+console.log(`Total guests: ${guests.length}`);
+
+guests.forEach(guest => {
+  console.log(`${guest.name} - Happiness: ${guest.happiness}`);
+});
+
+// Get all staff
+const staff = map.getAllEntities('staff');
+staff.forEach(member => {
+  console.log(`${member.name} (${member.staffType})`);
+});
+
+// Get all vehicles
+const cars = map.getAllEntities('car');
+console.log(`Vehicles on track: ${cars.length}`);
+```
+
+### getAllEntitiesOnTile()
+
+Gets all entities of a specific type at a tile position.
+
+<ParamField path="type" type="EntityType" required>
+  The entity type.
+</ParamField>
+
+<ParamField path="tilePos" type="CoordsXY" required>
+  The tile coordinates.
+</ParamField>
+
+```javascript
+const guestsOnTile = map.getAllEntitiesOnTile('guest', { x: 64, y: 64 });
+console.log(`Guests at (64, 64): ${guestsOnTile.length}`);
+
+const litterOnTile = map.getAllEntitiesOnTile('litter', { x: 32, y: 32 });
+console.log(`Litter at (32, 32): ${litterOnTile.length}`);
+```
+
+### createEntity()
+
+Creates a new entity of the specified type.
+
+<ParamField path="type" type="EntityType" required>
+  The entity type to create.
+</ParamField>
+
+<ParamField path="initializer" type="object" required>
+  Initial properties for the entity.
+</ParamField>
+
+```javascript
+// Create a balloon
+const balloon = map.createEntity('balloon', {
+  x: 1024,
+  y: 1024,
+  z: 32,
+  colour: 0
+});
+
+// Create litter
+const litter = map.createEntity('litter', {
+  x: 2048,
+  y: 2048,
+  z: 16,
+  litterType: 'empty_can'
+});
+```
+
+## Track Iteration
+
+### getTrackIterator()
+
+Gets a track iterator for iterating through a ride's circuit.
+
+<ParamField path="location" type="CoordsXY" required>
+  The tile coordinates.
+</ParamField>
+
+<ParamField path="elementIndex" type="number" required>
+  The index of the track element on the tile.
+</ParamField>
+
+```javascript
+const tile = map.getTile(32, 32);
+const trackIndex = tile.elements.findIndex(e => e.type === 'track');
+
+if (trackIndex !== -1) {
+  const iterator = map.getTrackIterator({ x: 32, y: 32 }, trackIndex);
+  
+  if (iterator) {
+    console.log('Current position:', iterator.position);
+    console.log('Current segment:', iterator.segment?.description);
+    
+    // Move forward along the track
+    if (iterator.next()) {
+      console.log('Next position:', iterator.position);
+    }
+    
+    // Move backward
+    if (iterator.previous()) {
+      console.log('Previous position:', iterator.position);
+    }
+  }
+}
+```
+
+## Usage Examples
+
+### Find Empty Land
+
+```javascript
+function findEmptyLand() {
+  for (let y = 0; y < map.size.y; y++) {
+    for (let x = 0; x < map.size.x; x++) {
+      const tile = map.getTile(x, y);
+      const surface = tile.elements.find(e => e.type === 'surface');
+      
+      if (surface && surface.hasOwnership && tile.numElements === 1) {
+        console.log(`Empty land at (${x}, ${y})`);
+        return { x, y };
+      }
+    }
+  }
+  return null;
+}
+```
+
+### Count Guest Thoughts
+
+```javascript
+function countThoughts() {
+  const guests = map.getAllEntities('guest');
+  const thoughtCounts = {};
+  
+  guests.forEach(guest => {
+    guest.thoughts.forEach(thought => {
+      thoughtCounts[thought.type] = (thoughtCounts[thought.type] || 0) + 1;
+    });
+  });
+  
+  console.log('Guest thoughts:', thoughtCounts);
+}
+```
+
+### Track All Rides
+
+```javascript
+function logAllRides() {
+  console.log('=== All Rides ===');
+  map.rides.forEach(ride => {
+    console.log(`${ride.name} (ID: ${ride.id})`);
+    console.log(`  Type: ${ride.classification}`);
+    console.log(`  Status: ${ride.status}`);
+    console.log(`  Excitement: ${(ride.excitement / 100).toFixed(2)}`);
+    console.log(`  Intensity: ${(ride.intensity / 100).toFixed(2)}`);
+    console.log(`  Customers: ${ride.totalCustomers}`);
+  });
+}
+```
+
+### Clean Up Litter
+
+```javascript
+function cleanAllLitter() {
+  const litter = map.getAllEntities('litter');
+  console.log(`Removing ${litter.length} litter items`);
+  
+  litter.forEach(item => {
+    item.remove();
+  });
+}
+```
+
+### Monitor Staff Efficiency
+
+```javascript
+function monitorStaff() {
+  const staff = map.getAllEntities('staff');
+  
+  staff.forEach(member => {
+    if (member.staffType === 'handyman') {
+      console.log(`${member.name}:`);
+      console.log(`  Lawns mown: ${member.lawnsMown}`);
+      console.log(`  Gardens watered: ${member.gardensWatered}`);
+      console.log(`  Litter swept: ${member.litterSwept}`);
+      console.log(`  Bins emptied: ${member.binsEmptied}`);
+    } else if (member.staffType === 'mechanic') {
+      console.log(`${member.name}:`);
+      console.log(`  Rides fixed: ${member.ridesFixed}`);
+      console.log(`  Inspections: ${member.ridesInspected}`);
+    }
+  });
+}
+```
+
+## Coordinate System
+
+<Note>
+OpenRCT2 uses a coordinate system where:
+- Each in-game tile is 32x32 units
+- The z-coordinate raises 16 units per land increment
+- A full-height wall is 32 units in height
+- Tile coordinates are in multiples of 32
+</Note>
+
+```javascript
+// Convert tile coordinates to world coordinates
+function tileToWorld(tileX, tileY) {
+  return {
+    x: tileX * 32,
+    y: tileY * 32
+  };
+}
+
+// Convert world coordinates to tile coordinates
+function worldToTile(worldX, worldY) {
+  return {
+    x: Math.floor(worldX / 32),
+    y: Math.floor(worldY / 32)
+  };
+}
+```

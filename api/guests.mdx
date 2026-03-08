@@ -1,0 +1,498 @@
+---
+title: Guest API
+description: Guest entity APIs for managing park visitors in OpenRCT2
+---
+
+Guests are park visitors that can be found using `map.getAllEntities('guest')`. Each guest has properties controlling their appearance, needs, thoughts, and items.
+
+## Accessing Guests
+
+```javascript
+// Get all guests
+const guests = map.getAllEntities('guest');
+
+// Get a specific guest by ID
+const guest = map.getEntity(guestId);
+
+// Get guests on a specific tile
+const guestsOnTile = map.getAllEntitiesOnTile('guest', { x: 64, y: 64 });
+```
+
+## Appearance Properties
+
+<ResponseField name="name" type="string">
+  Name of the guest.
+  ```javascript
+  guest.name = 'John Smith';
+  console.log(`Guest: ${guest.name}`);
+  ```
+</ResponseField>
+
+<ResponseField name="tshirtColour" type="number">
+  Colour of the guest's t-shirt (0-31).
+  ```javascript
+  guest.tshirtColour = 10; // Change shirt color
+  ```
+</ResponseField>
+
+<ResponseField name="trousersColour" type="number">
+  Colour of the guest's trousers (0-31).
+  ```javascript
+  guest.trousersColour = 5;
+  ```
+</ResponseField>
+
+<ResponseField name="balloonColour" type="number">
+  Colour of the guest's balloon if they have one.
+  ```javascript
+  guest.balloonColour = 3;
+  ```
+</ResponseField>
+
+<ResponseField name="hatColour" type="number">
+  Colour of the guest's hat if they have one.
+  ```javascript
+  guest.hatColour = 7;
+  ```
+</ResponseField>
+
+<ResponseField name="umbrellaColour" type="number">
+  Colour of the guest's umbrella if they have one.
+  ```javascript
+  guest.umbrellaColour = 12;
+  ```
+</ResponseField>
+
+## Status Properties
+
+<ResponseField name="happiness" type="number">
+  How happy the guest is (0-255). Higher is happier.
+  ```javascript
+  console.log(`Happiness: ${guest.happiness}`);
+  guest.happiness = 255; // Make guest very happy
+  ```
+</ResponseField>
+
+<ResponseField name="happinessTarget" type="number">
+  The target happiness value. Happiness slowly moves towards this value.
+  ```javascript
+  guest.happinessTarget = 200;
+  ```
+</ResponseField>
+
+<ResponseField name="energy" type="number">
+  How tired the guest is (32-128). Lower values mean more tired.
+  ```javascript
+  console.log(`Energy: ${guest.energy}`);
+  ```
+</ResponseField>
+
+<ResponseField name="energyTarget" type="number">
+  The target energy value.
+  ```javascript
+  guest.energyTarget = 120;
+  ```
+</ResponseField>
+
+<ResponseField name="nausea" type="number">
+  How nauseated the guest is (0-255). Higher values mean more nauseated.
+  ```javascript
+  if (guest.nausea > 200) {
+    console.log(`${guest.name} feels very sick!`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="nauseaTarget" type="number">
+  The target nausea value.
+  ```javascript
+  guest.nauseaTarget = 0; // Target feeling better
+  ```
+</ResponseField>
+
+<ResponseField name="hunger" type="number">
+  How hungry the guest is (0-255). Lower values mean more hungry.
+  ```javascript
+  if (guest.hunger < 100) {
+    console.log(`${guest.name} is hungry`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="thirst" type="number">
+  How thirsty the guest is (0-255). Lower values mean more thirsty.
+  ```javascript
+  if (guest.thirst < 100) {
+    console.log(`${guest.name} is thirsty`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="toilet" type="number">
+  How much the guest needs the toilet (0-255). Higher values mean more urgent.
+  ```javascript
+  if (guest.toilet > 180) {
+    console.log(`${guest.name} needs a toilet!`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="mass" type="number">
+  The mass of the guest. Affects vehicle mass on rides.
+  ```javascript
+  console.log(`Mass: ${guest.mass}`);
+  ```
+</ResponseField>
+
+## Preferences
+
+<ResponseField name="minIntensity" type="number">
+  The guest's minimum preferred intensity (0-15).
+  ```javascript
+  console.log(`Min intensity: ${guest.minIntensity}`);
+  ```
+</ResponseField>
+
+<ResponseField name="maxIntensity" type="number">
+  The guest's maximum preferred intensity (0-15).
+  ```javascript
+  console.log(`Max intensity: ${guest.maxIntensity}`);
+  ```
+</ResponseField>
+
+<ResponseField name="nauseaTolerance" type="number">
+  The guest's tolerance to nauseating rides (0-3).
+  ```javascript
+  console.log(`Nausea tolerance: ${guest.nauseaTolerance}`);
+  ```
+</ResponseField>
+
+<ResponseField name="favouriteRide" type="number | null">
+  The ride ID of the guest's favourite ride, or null if none.
+  ```javascript
+  if (guest.favouriteRide !== null) {
+    const ride = map.getRide(guest.favouriteRide);
+    console.log(`Favourite: ${ride.name}`);
+  }
+  ```
+</ResponseField>
+
+## Financial
+
+<ResponseField name="cash" type="number">
+  Amount of cash in the guest's pocket.
+  ```javascript
+  console.log(`Cash: £${guest.cash / 10}`);
+  guest.cash = 5000; // Give guest £50
+  ```
+</ResponseField>
+
+## Location
+
+<ResponseField name="isInPark" type="boolean" readonly>
+  Whether the guest is within the park boundaries.
+  ```javascript
+  if (guest.isInPark) {
+    console.log(`${guest.name} is in the park`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="isLost" type="boolean" readonly>
+  Whether the guest is lost (lostCountdown < 90).
+  ```javascript
+  if (guest.isLost) {
+    console.log(`${guest.name} is lost!`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="lostCountdown" type="number">
+  Countdown (0-255) tracking how long the guest has been looking for their destination.
+  ```javascript
+  console.log(`Lost countdown: ${guest.lostCountdown}`);
+  ```
+</ResponseField>
+
+<ResponseField name="destination" type="CoordsXY">
+  The guest's direct destination coordinates.
+  ```javascript
+  console.log(`Heading to: (${guest.destination.x}, ${guest.destination.y})`);
+  ```
+</ResponseField>
+
+<ResponseField name="direction" type="Direction">
+  The guest's orthogonal direction (0-3).
+  ```javascript
+  console.log(`Facing direction: ${guest.direction}`);
+  ```
+</ResponseField>
+
+## Thoughts
+
+<ResponseField name="thoughts" type="Thought[]" readonly>
+  The list of thoughts this guest has.
+  ```javascript
+  guest.thoughts.forEach(thought => {
+    console.log(thought.toString());
+  });
+  ```
+</ResponseField>
+
+Each thought has:
+- `type` - The thought type (e.g., "sick", "hungry", "was_great")
+- `item` - The thought argument (ride ID, shop item, etc.)
+- `freshness` - How fresh the thought is (lower = more recent)
+- `freshTimeout` - The freshness timeout
+- `toString()` - Get formatted string with Unicode quotes
+
+```javascript
+function analyzeThoughts(guest) {
+  const thoughtTypes = {};
+  
+  guest.thoughts.forEach(thought => {
+    thoughtTypes[thought.type] = (thoughtTypes[thought.type] || 0) + 1;
+  });
+  
+  console.log(`${guest.name}'s thoughts:`, thoughtTypes);
+}
+```
+
+## Items
+
+<ResponseField name="items" type="GuestItem[]" readonly>
+  The list of items this guest has.
+  ```javascript
+  console.log(`${guest.name} has ${guest.items.length} items`);
+  ```
+</ResponseField>
+
+### hasItem()
+
+Checks whether the guest has a certain item.
+
+<ParamField path="item" type="GuestItem" required>
+  The item to check for.
+</ParamField>
+
+```javascript
+if (guest.hasItem('map')) {
+  console.log(`${guest.name} has a map`);
+}
+
+if (guest.hasItem('umbrella')) {
+  console.log(`${guest.name} has an umbrella`);
+}
+```
+
+### giveItem()
+
+Gives an item to the guest. Guests can only have one item of each type.
+
+<ParamField path="item" type="GuestItem" required>
+  The item to give.
+</ParamField>
+
+```javascript
+// Give simple item
+guest.giveItem('balloon');
+guest.giveItem('map');
+guest.giveItem('umbrella');
+
+// Give photo with ride ID
+guest.giveItem({
+  type: 'photo1',
+  rideId: 0
+});
+
+// Give voucher
+guest.giveItem({
+  type: 'voucher',
+  voucherType: 'entry_free'
+});
+```
+
+### removeItem()
+
+Removes an item from the guest's possession.
+
+<ParamField path="item" type="GuestItem" required>
+  The item to remove.
+</ParamField>
+
+```javascript
+guest.removeItem('balloon');
+guest.removeItem('map');
+```
+
+### removeAllItems()
+
+Removes all items from the guest's possession.
+
+```javascript
+guest.removeAllItems();
+console.log('All items removed');
+```
+
+## Animations
+
+<ResponseField name="availableAnimations" type="GuestAnimation[]" readonly>
+  The animations available to this guest.
+  ```javascript
+  console.log('Available animations:', guest.availableAnimations);
+  ```
+</ResponseField>
+
+<ResponseField name="animation" type="GuestAnimation">
+  The animation the guest is currently exhibiting.
+  Animations include: "walking", "checkTime", "watchRide", "eatFood", "shakeHead", "emptyPockets", "wow", "throwUp", "jump", "joy", "readMap", "wave", "takePhoto", "clap", etc.
+  ```javascript
+  console.log(`Current animation: ${guest.animation}`);
+  guest.animation = 'wave'; // Make guest wave
+  ```
+</ResponseField>
+
+<ResponseField name="animationOffset" type="number">
+  The frame offset in the current animation.
+  ```javascript
+  console.log(`Animation frame: ${guest.animationOffset}`);
+  ```
+</ResponseField>
+
+<ResponseField name="animationLength" type="number" readonly>
+  The total number of frames in the current animation.
+  ```javascript
+  console.log(`Animation length: ${guest.animationLength}`);
+  ```
+</ResponseField>
+
+### getAnimationSpriteIds()
+
+Gets an array of sprite IDs representing a particular guest animation.
+
+<ParamField path="animation" type="GuestAnimation" required>
+  The animation to get sprites for.
+</ParamField>
+
+<ParamField path="rotation" type="number" required>
+  The rotation (0-7).
+</ParamField>
+
+```javascript
+const sprites = guest.getAnimationSpriteIds('wave', 0);
+console.log('Wave animation sprites:', sprites);
+```
+
+## Flags
+
+### getFlag()
+
+Gets whether a given flag is set.
+
+<ParamField path="key" type="PeepFlags" required>
+  The flag to test.
+</ParamField>
+
+```javascript
+if (guest.getFlag('tracking')) {
+  console.log(`${guest.name} is being tracked`);
+}
+
+if (guest.getFlag('leavingPark')) {
+  console.log(`${guest.name} is leaving`);
+}
+```
+
+### setFlag()
+
+Sets a flag to the given value.
+
+<ParamField path="key" type="PeepFlags" required>
+  The flag to set.
+</ParamField>
+
+<ParamField path="value" type="boolean" required>
+  Whether to set or clear the flag.
+</ParamField>
+
+```javascript
+guest.setFlag('tracking', true); // Enable tracking
+guest.setFlag('leavingPark', false); // Stop guest from leaving
+```
+
+Available flags: "leavingPark", "slowWalk", "tracking", "waving", "hasPaidForParkEntry", "photo", "painting", "wow", "litter", "lost", "hunger", "toilet", "crowded", "happiness", "nausea", "purple", "pizza", "explode", "rideShouldBeMarkedAsFavourite", "parkEntranceChosen", "contagious", "joy", "angry", "iceCream", "hereWeAre", "positionFrozen", "animationFrozen"
+
+## Usage Examples
+
+### Find Unhappy Guests
+
+```javascript
+function findUnhappyGuests() {
+  const guests = map.getAllEntities('guest');
+  const unhappy = guests.filter(g => g.happiness < 100);
+  
+  console.log(`Found ${unhappy.length} unhappy guests`);
+  
+  unhappy.forEach(guest => {
+    console.log(`${guest.name}: Happiness ${guest.happiness}`);
+    guest.thoughts.forEach(thought => {
+      console.log(`  - ${thought.toString()}`);
+    });
+  });
+}
+```
+
+### Guest Status Report
+
+```javascript
+function guestReport(guest) {
+  console.log(`=== ${guest.name} ===`);
+  console.log(`Location: (${guest.x}, ${guest.y}, ${guest.z})`);
+  console.log(`In park: ${guest.isInPark}`);
+  console.log(`Cash: £${(guest.cash / 10).toFixed(2)}`);
+  console.log(`Happiness: ${guest.happiness}/255`);
+  console.log(`Energy: ${guest.energy}`);
+  console.log(`Hunger: ${guest.hunger}`);
+  console.log(`Thirst: ${guest.thirst}`);
+  console.log(`Nausea: ${guest.nausea}`);
+  console.log(`Items: ${guest.items.map(i => i.type).join(', ')}`);
+}
+```
+
+### Give Free Items
+
+```javascript
+function giveFreeItems() {
+  const guests = map.getAllEntities('guest');
+  
+  guests.forEach(guest => {
+    if (!guest.hasItem('map')) {
+      guest.giveItem('map');
+    }
+    
+    if (climate.current.weather === 'rain' && !guest.hasItem('umbrella')) {
+      guest.giveItem('umbrella');
+    }
+  });
+}
+```
+
+### Make Everyone Happy
+
+```javascript
+function makeEveryoneHappy() {
+  const guests = map.getAllEntities('guest');
+  
+  guests.forEach(guest => {
+    guest.happiness = 255;
+    guest.happinessTarget = 255;
+    guest.energy = 128;
+    guest.hunger = 255;
+    guest.thirst = 255;
+    guest.nausea = 0;
+    guest.toilet = 0;
+  });
+  
+  console.log(`Made ${guests.length} guests happy!`);
+}
+```

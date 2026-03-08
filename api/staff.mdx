@@ -1,0 +1,456 @@
+---
+title: Staff API
+description: Staff entity APIs for managing park employees in OpenRCT2
+---
+
+Staff members are employees that maintain and operate the park. Access them using `map.getAllEntities('staff')`.
+
+## Staff Types
+
+There are four types of staff:
+- `"handyman"` - Sweeps litter, mows lawns, waters gardens, empties bins
+- `"mechanic"` - Inspects and fixes rides
+- `"security"` - Stops vandals
+- `"entertainer"` - Entertains guests
+
+```javascript
+const staff = map.getAllEntities('staff');
+staff.forEach(member => {
+  console.log(`${member.name}: ${member.staffType}`);
+});
+```
+
+## Base Staff Properties
+
+<ResponseField name="name" type="string">
+  Name of the staff member.
+  ```javascript
+  member.name = 'Bob the Handyman';
+  ```
+</ResponseField>
+
+<ResponseField name="staffType" type="StaffType">
+  The type of staff member.
+  ```javascript
+  console.log(`Type: ${member.staffType}`);
+  ```
+</ResponseField>
+
+<ResponseField name="colour" type="number">
+  Colour of the staff member (0-31). Not applicable to entertainers.
+  ```javascript
+  member.colour = 10; // Change uniform color
+  ```
+</ResponseField>
+
+<ResponseField name="orders" type="number">
+  The enabled jobs the staff can do (bitmask).
+  
+  For handymen:
+  - `1` (0001): Sweeping
+  - `2` (0010): Watering flowers
+  - `4` (0100): Empty bins
+  - `8` (1000): Mowing
+  
+  For mechanics:
+  - `1` (0001): Inspect rides
+  - `2` (0010): Fix rides
+  
+  ```javascript
+  member.orders = 15; // Enable all handyman tasks (1+2+4+8)
+  member.orders = 3;  // Enable both mechanic tasks (1+2)
+  ```
+</ResponseField>
+
+<ResponseField name="costume" type="StaffCostume | string | number">
+  The staff member's costume. Primarily for entertainers.
+  
+  Available costumes: "panda", "tiger", "elephant", "roman", "gorilla", "snowman", "knight", "astronaut", "bandit", "sheriff", "pirate"
+  
+  ```javascript
+  member.costume = 'panda';
+  ```
+</ResponseField>
+
+<ResponseField name="availableCostumes" type="StaffCostume[]" readonly>
+  Array of costumes available to this staff member.
+  ```javascript
+  console.log('Available costumes:', member.availableCostumes);
+  ```
+</ResponseField>
+
+## Location
+
+<ResponseField name="x" type="number">
+  The x-coordinate in game units.
+</ResponseField>
+
+<ResponseField name="y" type="number">
+  The y-coordinate in game units.
+</ResponseField>
+
+<ResponseField name="z" type="number">
+  The z-coordinate in game units.
+</ResponseField>
+
+<ResponseField name="destination" type="CoordsXY">
+  The staff member's direct destination.
+  ```javascript
+  console.log(`Going to: (${member.destination.x}, ${member.destination.y})`);
+  ```
+</ResponseField>
+
+<ResponseField name="direction" type="Direction">
+  The staff member's orthogonal direction (0-3).
+</ResponseField>
+
+<ResponseField name="energy" type="number">
+  How tired the staff member is (32-128). Lower is more tired.
+</ResponseField>
+
+<ResponseField name="energyTarget" type="number">
+  The target energy value.
+</ResponseField>
+
+## Patrol Area
+
+<ResponseField name="patrolArea" type="PatrolArea" readonly>
+  Gets the patrol area for the staff member.
+</ResponseField>
+
+The patrol area object has these methods:
+
+### tiles
+
+Gets or sets all individual tiles in the patrol area.
+
+```javascript
+// Get all patrol tiles
+const tiles = member.patrolArea.tiles;
+console.log(`Patrol area has ${tiles.length} tiles`);
+
+// Set patrol tiles
+member.patrolArea.tiles = [
+  { x: 32, y: 32 },
+  { x: 33, y: 32 },
+  { x: 34, y: 32 }
+];
+```
+
+<Warning>
+Fetching all patrol area tiles can degrade performance for large areas.
+</Warning>
+
+### clear()
+
+Clears all tiles from the patrol area.
+
+```javascript
+member.patrolArea.clear();
+```
+
+### add()
+
+Adds coordinates or a map range to the patrol area.
+
+<ParamField path="coords" type="CoordsXY[] | MapRange" required>
+  Array of coordinates or a map range to add.
+</ParamField>
+
+```javascript
+// Add individual tiles
+member.patrolArea.add([
+  { x: 32, y: 32 },
+  { x: 33, y: 32 }
+]);
+
+// Add a rectangular range
+member.patrolArea.add({
+  leftTop: { x: 10, y: 10 },
+  rightBottom: { x: 20, y: 20 }
+});
+```
+
+### remove()
+
+Removes coordinates or a map range from the patrol area.
+
+<ParamField path="coords" type="CoordsXY[] | MapRange" required>
+  Array of coordinates or a map range to remove.
+</ParamField>
+
+```javascript
+member.patrolArea.remove([
+  { x: 32, y: 32 }
+]);
+
+member.patrolArea.remove({
+  leftTop: { x: 10, y: 10 },
+  rightBottom: { x: 15, y: 15 }
+});
+```
+
+### contains()
+
+Checks whether a coordinate is within the patrol area.
+
+<ParamField path="coord" type="CoordsXY" required>
+  The coordinate to check.
+</ParamField>
+
+```javascript
+if (member.patrolArea.contains({ x: 32, y: 32 })) {
+  console.log('Tile is in patrol area');
+}
+```
+
+## Handyman
+
+Handymen clean and maintain the park.
+
+<ResponseField name="lawnsMown" type="number" readonly>
+  The number of lawns mown by the handyman.
+  ```javascript
+  console.log(`Lawns mown: ${handyman.lawnsMown}`);
+  ```
+</ResponseField>
+
+<ResponseField name="gardensWatered" type="number" readonly>
+  The number of gardens watered by the handyman.
+  ```javascript
+  console.log(`Gardens watered: ${handyman.gardensWatered}`);
+  ```
+</ResponseField>
+
+<ResponseField name="litterSwept" type="number" readonly>
+  The number of litter swept by the handyman.
+  ```javascript
+  console.log(`Litter swept: ${handyman.litterSwept}`);
+  ```
+</ResponseField>
+
+<ResponseField name="binsEmptied" type="number" readonly>
+  The number of bins emptied by the handyman.
+  ```javascript
+  console.log(`Bins emptied: ${handyman.binsEmptied}`);
+  ```
+</ResponseField>
+
+## Mechanic
+
+Mechanics inspect and fix rides.
+
+<ResponseField name="ridesFixed" type="number" readonly>
+  The number of rides fixed by the mechanic.
+  ```javascript
+  console.log(`Rides fixed: ${mechanic.ridesFixed}`);
+  ```
+</ResponseField>
+
+<ResponseField name="ridesInspected" type="number" readonly>
+  The number of inspections performed by the mechanic.
+  ```javascript
+  console.log(`Inspections: ${mechanic.ridesInspected}`);
+  ```
+</ResponseField>
+
+## Security Guard
+
+Security guards stop vandals.
+
+<ResponseField name="vandalsStopped" type="number" readonly>
+  The number of vandals stopped by the security guard.
+  ```javascript
+  console.log(`Vandals stopped: ${security.vandalsStopped}`);
+  ```
+</ResponseField>
+
+## Animations
+
+<ResponseField name="availableAnimations" type="StaffAnimation[]" readonly>
+  The animations available to this staff member.
+</ResponseField>
+
+<ResponseField name="animation" type="StaffAnimation">
+  The animation the staff member is currently exhibiting.
+  Animations include: "walking", "watchRide", "wave", "staffMower", "staffSweep", "staffAnswerCall", "staffCheckBoard", "staffFix", "staffWatering", "staffEmptyBin", etc.
+</ResponseField>
+
+<ResponseField name="animationOffset" type="number">
+  The frame offset in the current animation.
+</ResponseField>
+
+<ResponseField name="animationLength" type="number" readonly>
+  The total number of frames in the current animation.
+</ResponseField>
+
+### getAnimationSpriteIds()
+
+Gets sprite IDs for a staff animation.
+
+<ParamField path="animation" type="StaffAnimation" required>
+  The animation to get sprites for.
+</ParamField>
+
+<ParamField path="rotation" type="number" required>
+  The rotation (0-7).
+</ParamField>
+
+```javascript
+const sprites = member.getAnimationSpriteIds('staffSweep', 0);
+```
+
+### getCostumeStrings()
+
+Returns an array of costume strings with inline sprites.
+
+```javascript
+const costumes = member.getCostumeStrings();
+console.log('Costumes:', costumes);
+```
+
+## Usage Examples
+
+### Hire Staff
+
+```javascript
+// Hire a handyman
+context.executeAction('staffhire', {
+  autoPosition: true,
+  staffType: 0, // Handyman
+  costumeIndex: 0,
+  staffOrders: 15 // All tasks enabled
+}, (result) => {
+  if (result.error === 0) {
+    const staffId = result.peep;
+    const staff = map.getEntity(staffId);
+    console.log(`Hired ${staff.name}`);
+  }
+});
+
+// Hire a mechanic
+context.executeAction('staffhire', {
+  autoPosition: true,
+  staffType: 1, // Mechanic
+  costumeIndex: 0,
+  staffOrders: 3 // Inspect and fix
+});
+```
+
+### Staff Performance Report
+
+```javascript
+function staffPerformanceReport() {
+  const staff = map.getAllEntities('staff');
+  
+  console.log('=== Staff Performance ===');
+  
+  staff.forEach(member => {
+    console.log(`\n${member.name} (${member.staffType})`);
+    
+    if (member.staffType === 'handyman') {
+      console.log(`  Lawns mown: ${member.lawnsMown}`);
+      console.log(`  Gardens watered: ${member.gardensWatered}`);
+      console.log(`  Litter swept: ${member.litterSwept}`);
+      console.log(`  Bins emptied: ${member.binsEmptied}`);
+    } else if (member.staffType === 'mechanic') {
+      console.log(`  Rides fixed: ${member.ridesFixed}`);
+      console.log(`  Inspections: ${member.ridesInspected}`);
+    } else if (member.staffType === 'security') {
+      console.log(`  Vandals stopped: ${member.vandalsStopped}`);
+    }
+  });
+}
+```
+
+### Set Patrol Areas
+
+```javascript
+function setPatrolArea(staff, area) {
+  staff.patrolArea.clear();
+  staff.patrolArea.add(area);
+  console.log(`Set patrol area for ${staff.name}`);
+}
+
+// Set rectangular patrol area
+const handyman = map.getAllEntities('staff')
+  .find(s => s.staffType === 'handyman');
+
+if (handyman) {
+  setPatrolArea(handyman, {
+    leftTop: { x: 10, y: 10 },
+    rightBottom: { x: 30, y: 30 }
+  });
+}
+```
+
+### Fire Inefficient Staff
+
+```javascript
+function fireInefficientStaff() {
+  const staff = map.getAllEntities('staff');
+  
+  staff.forEach(member => {
+    let shouldFire = false;
+    
+    if (member.staffType === 'handyman') {
+      const total = member.lawnsMown + member.gardensWatered + 
+                   member.litterSwept + member.binsEmptied;
+      if (total < 10) shouldFire = true;
+    } else if (member.staffType === 'mechanic') {
+      if (member.ridesFixed + member.ridesInspected < 5) {
+        shouldFire = true;
+      }
+    }
+    
+    if (shouldFire) {
+      console.log(`Firing ${member.name} for poor performance`);
+      context.executeAction('stafffire', { id: member.id });
+    }
+  });
+}
+```
+
+### Change Staff Uniforms
+
+```javascript
+function changeUniformColors() {
+  const staff = map.getAllEntities('staff');
+  
+  staff.forEach(member => {
+    if (member.staffType === 'handyman') {
+      member.colour = 2; // Green
+    } else if (member.staffType === 'mechanic') {
+      member.colour = 10; // Blue
+    } else if (member.staffType === 'security') {
+      member.colour = 0; // Black
+    }
+  });
+}
+```
+
+### Auto-Assign Patrol Areas
+
+```javascript
+function autoAssignPatrolAreas() {
+  const handymen = map.getAllEntities('staff')
+    .filter(s => s.staffType === 'handyman');
+  
+  const mapSize = map.size;
+  const sections = handymen.length;
+  const sectionWidth = Math.floor(mapSize.x / sections);
+  
+  handymen.forEach((handyman, index) => {
+    const startX = index * sectionWidth;
+    const endX = (index + 1) * sectionWidth - 1;
+    
+    handyman.patrolArea.clear();
+    handyman.patrolArea.add({
+      leftTop: { x: startX, y: 0 },
+      rightBottom: { x: endX, y: mapSize.y - 1 }
+    });
+    
+    console.log(`${handyman.name} assigned section ${index + 1}`);
+  });
+}
+```

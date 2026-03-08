@@ -1,0 +1,261 @@
+---
+title: Console API
+description: Console APIs for logging and debugging in OpenRCT2
+---
+
+The `console` object provides methods for logging output and interacting with the stdout console. This is useful for debugging plugins and displaying information.
+
+## Methods
+
+### log()
+
+Logs a message to the console with optional additional parameters.
+
+<ParamField path="message" type="any" optional>
+  The message to log.
+</ParamField>
+
+<ParamField path="optionalParams" type="any[]" variadic>
+  Additional values to log.
+</ParamField>
+
+```javascript
+console.log('Hello, OpenRCT2!');
+console.log('Park rating:', park.rating);
+console.log('Multiple values:', 1, 2, 3);
+console.log('Object:', { name: 'Test', value: 42 });
+```
+
+<Tabs>
+  <Tab title="Simple Logging">
+    ```javascript
+    // Log simple messages
+    console.log('Plugin loaded successfully');
+    console.log('Current API version:', context.apiVersion);
+    ```
+  </Tab>
+  <Tab title="Debugging Data">
+    ```javascript
+    // Log complex data structures
+    const ride = map.getRide(0);
+    console.log('Ride data:', {
+      id: ride.id,
+      name: ride.name,
+      excitement: ride.excitement,
+      intensity: ride.intensity
+    });
+    ```
+  </Tab>
+  <Tab title="Error Tracking">
+    ```javascript
+    // Log errors and warnings
+    try {
+      // Some risky operation
+      const result = performOperation();
+      console.log('Operation succeeded:', result);
+    } catch (error) {
+      console.log('ERROR:', error);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Usage Examples
+
+### Basic Logging
+
+Log plugin initialization and status messages:
+
+```javascript
+registerPlugin({
+  name: 'My Plugin',
+  version: '1.0.0',
+  authors: ['Author'],
+  type: 'remote',
+  licence: 'MIT',
+  targetApiVersion: 77,
+  main: () => {
+    console.log('My Plugin initialized');
+    console.log('API Version:', context.apiVersion);
+    console.log('Game Mode:', context.mode);
+  }
+});
+```
+
+### Debugging Game State
+
+Log game state information for debugging:
+
+```javascript
+function logParkStatus() {
+  console.log('=== Park Status ===');
+  console.log('Name:', park.name);
+  console.log('Cash:', park.cash);
+  console.log('Rating:', park.rating);
+  console.log('Guests:', park.guests);
+  console.log('Rides:', map.numRides);
+  console.log('Date:', `${date.year}-${date.month}-${date.day}`);
+}
+
+// Log status every in-game day
+context.subscribe('interval.day', () => {
+  logParkStatus();
+});
+```
+
+### Event Monitoring
+
+Log events as they occur:
+
+```javascript
+// Monitor guest generation
+context.subscribe('guest.generation', (e) => {
+  console.log('Guest generated with ID:', e.id);
+});
+
+// Monitor network activity
+context.subscribe('network.join', (e) => {
+  const player = network.getPlayer(e.player);
+  console.log('Player joined:', player.name);
+});
+
+context.subscribe('network.leave', (e) => {
+  console.log('Player left:', e.player);
+});
+```
+
+### Performance Monitoring
+
+Log performance metrics:
+
+```javascript
+let tickCount = 0;
+let lastLog = Date.now();
+
+context.subscribe('interval.tick', () => {
+  tickCount++;
+  
+  const now = Date.now();
+  if (now - lastLog >= 1000) {
+    console.log('Ticks per second:', tickCount);
+    tickCount = 0;
+    lastLog = now;
+  }
+});
+```
+
+### Action Logging
+
+Log game actions for debugging:
+
+```javascript
+context.subscribe('action.execute', (e) => {
+  console.log('Action executed:', e.action);
+  console.log('Player:', e.player);
+  console.log('Arguments:', e.args);
+  
+  if (e.result.error) {
+    console.log('ERROR:', e.result.errorMessage);
+  } else {
+    console.log('Success! Cost:', e.result.cost);
+  }
+});
+```
+
+## Advanced Logging
+
+### Conditional Logging
+
+Log only when certain conditions are met:
+
+```javascript
+const DEBUG = true;
+
+function debugLog(message, ...params) {
+  if (DEBUG) {
+    console.log('[DEBUG]', message, ...params);
+  }
+}
+
+debugLog('This is a debug message');
+debugLog('Value:', 42);
+```
+
+### Categorized Logging
+
+Organize logs by category:
+
+```javascript
+const Logger = {
+  info: (msg, ...args) => console.log('[INFO]', msg, ...args),
+  warn: (msg, ...args) => console.log('[WARN]', msg, ...args),
+  error: (msg, ...args) => console.log('[ERROR]', msg, ...args),
+  debug: (msg, ...args) => console.log('[DEBUG]', msg, ...args)
+};
+
+Logger.info('Plugin started');
+Logger.warn('Low park rating:', park.rating);
+Logger.error('Failed to load ride');
+Logger.debug('Variable value:', someValue);
+```
+
+### Timestamped Logging
+
+Add timestamps to log messages:
+
+```javascript
+function log(message, ...params) {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}]`, message, ...params);
+}
+
+log('Event occurred');
+log('Guest count:', park.guests);
+```
+
+## Tips and Best Practices
+
+<Note>
+**Performance**: Excessive logging can impact game performance. Use logging judiciously, especially in frequently called functions like tick handlers.
+</Note>
+
+<Tip>
+**Development vs Production**: Consider using a debug flag to enable/disable detailed logging between development and production builds.
+</Tip>
+
+<Warning>
+**Sensitive Data**: Avoid logging sensitive information like player passwords or personal data in multiplayer environments.
+</Warning>
+
+## Console Output Location
+
+Console output appears in different locations depending on how OpenRCT2 is running:
+
+- **Windows GUI**: Output appears in the console window if started with console enabled
+- **Windows Console**: Output appears directly in the terminal
+- **Linux/Mac**: Output appears in the terminal where OpenRCT2 was launched
+- **Server**: Output appears in the server console/logs
+
+## Legacy Console Commands
+
+### executeLegacy()
+
+<Warning>
+This method is deprecated and should not be used in new plugins. It exists only for servers to continue using old commands.
+</Warning>
+
+Executes a command using the legacy console REPL.
+
+<ParamField path="command" type="string" required>
+  The command and arguments to execute.
+</ParamField>
+
+```javascript
+// Not recommended for use in plugins
+console.executeLegacy('get park_rating');
+```
+
+## See Also
+
+- [Context API](/api/context) - For game state and events
+- [UI API](/api/ui) - For displaying information in the game UI

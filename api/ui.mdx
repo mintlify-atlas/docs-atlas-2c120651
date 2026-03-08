@@ -1,0 +1,700 @@
+---
+title: UI API
+description: User interface APIs for windows and UI interaction in OpenRCT2
+---
+
+The `ui` object provides APIs for controlling the user interface. These APIs are only available to servers and clients not running in headless mode.
+
+<Warning>
+Always check if `ui` is available: `typeof ui !== 'undefined'`
+</Warning>
+
+## Properties
+
+<ResponseField name="width" type="number" readonly>
+  The width of the game window in pixels.
+  ```javascript
+  console.log(`Window width: ${ui.width}px`);
+  ```
+</ResponseField>
+
+<ResponseField name="height" type="number" readonly>
+  The height of the game window in pixels.
+  ```javascript
+  console.log(`Window height: ${ui.height}px`);
+  ```
+</ResponseField>
+
+<ResponseField name="windows" type="number" readonly>
+  The number of windows currently open.
+  ```javascript
+  console.log(`Open windows: ${ui.windows}`);
+  ```
+</ResponseField>
+
+<ResponseField name="mainViewport" type="Viewport" readonly>
+  The main viewport of the game.
+  ```javascript
+  const center = ui.mainViewport.getCentrePosition();
+  console.log(`Viewport center: (${center.x}, ${center.y})`);
+  ```
+</ResponseField>
+
+<ResponseField name="tileSelection" type="TileSelection" readonly>
+  The current tile selection.
+  ```javascript
+  if (ui.tileSelection.range) {
+    console.log('Selection range:', ui.tileSelection.range);
+  }
+  console.log('Selected tiles:', ui.tileSelection.tiles.length);
+  ```
+</ResponseField>
+
+<ResponseField name="tool" type="Tool | null" readonly>
+  The currently active tool, or null if no tool is active.
+  ```javascript
+  if (ui.tool) {
+    console.log(`Active tool: ${ui.tool.id}`);
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="imageManager" type="ImageManager" readonly>
+  The image manager for custom image allocation and manipulation.
+  ```javascript
+  const range = ui.imageManager.allocate(10);
+  console.log(`Allocated images: ${range.start} to ${range.start + range.count}`);
+  ```
+</ResponseField>
+
+## Window Management
+
+### openWindow()
+
+Opens a new custom window.
+
+<ParamField path="desc" type="WindowDesc" required>
+  The window descriptor defining the window's properties and widgets.
+</ParamField>
+
+```javascript
+const window = ui.openWindow({
+  classification: 'my-window',
+  title: 'My Custom Window',
+  width: 400,
+  height: 300,
+  widgets: [
+    {
+      type: 'label',
+      x: 10,
+      y: 20,
+      width: 380,
+      height: 14,
+      text: 'Hello, OpenRCT2!'
+    },
+    {
+      type: 'button',
+      x: 150,
+      y: 50,
+      width: 100,
+      height: 24,
+      text: 'Click Me',
+      onClick: () => {
+        console.log('Button clicked!');
+      }
+    }
+  ]
+});
+```
+
+<Tabs>
+  <Tab title="Simple Window">
+    ```javascript
+    ui.openWindow({
+      classification: 'info-window',
+      title: 'Information',
+      width: 300,
+      height: 200,
+      widgets: [
+        {
+          type: 'label',
+          x: 10,
+          y: 20,
+          width: 280,
+          height: 14,
+          text: `Park Rating: ${park.rating}`
+        }
+      ]
+    });
+    ```
+  </Tab>
+  <Tab title="Interactive Window">
+    ```javascript
+    ui.openWindow({
+      classification: 'control-panel',
+      title: 'Control Panel',
+      width: 400,
+      height: 250,
+      widgets: [
+        {
+          type: 'checkbox',
+          name: 'pauseGame',
+          x: 10,
+          y: 20,
+          width: 200,
+          height: 14,
+          text: 'Pause Game',
+          isChecked: context.paused,
+          onChange: (checked) => {
+            context.paused = checked;
+          }
+        },
+        {
+          type: 'spinner',
+          name: 'cashSpinner',
+          x: 10,
+          y: 50,
+          width: 150,
+          height: 24,
+          text: `Cash: ${park.cash}`,
+          onIncrement: () => {
+            park.cash += 1000;
+          },
+          onDecrement: () => {
+            park.cash -= 1000;
+          }
+        }
+      ]
+    });
+    ```
+  </Tab>
+  <Tab title="Tabbed Window">
+    ```javascript
+    ui.openWindow({
+      classification: 'tabbed-window',
+      title: 'Statistics',
+      width: 500,
+      height: 400,
+      tabs: [
+        {
+          image: 'guests',
+          widgets: [
+            {
+              type: 'label',
+              x: 10,
+              y: 20,
+              width: 480,
+              height: 14,
+              text: `Total Guests: ${park.guests}`
+            }
+          ]
+        },
+        {
+          image: 'finance',
+          widgets: [
+            {
+              type: 'label',
+              x: 10,
+              y: 20,
+              width: 480,
+              height: 14,
+              text: `Cash: £${(park.cash / 10).toFixed(2)}`
+            }
+          ]
+        }
+      ]
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### getWindow()
+
+Gets an existing window by ID or classification.
+
+<Tabs>
+  <Tab title="By ID">
+    <ParamField path="id" type="number" required>
+      The window ID.
+    </ParamField>
+    
+    ```javascript
+    const window = ui.getWindow(0);
+    if (window) {
+      console.log(`Window: ${window.title}`);
+    }
+    ```
+  </Tab>
+  <Tab title="By Classification">
+    <ParamField path="classification" type="string" required>
+      The window classification.
+    </ParamField>
+    
+    ```javascript
+    const window = ui.getWindow('my-window');
+    if (window) {
+      window.title = 'Updated Title';
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### closeWindows()
+
+Closes all windows with the specified classification.
+
+<ParamField path="classification" type="string" required>
+  The window classification to close.
+</ParamField>
+
+<ParamField path="id" type="number" optional>
+  Optional specific window ID to close.
+</ParamField>
+
+```javascript
+// Close all windows with classification
+ui.closeWindows('my-window');
+
+// Close specific window
+ui.closeWindows('my-window', 5);
+```
+
+### closeAllWindows()
+
+Closes all open windows.
+
+```javascript
+ui.closeAllWindows();
+console.log('All windows closed');
+```
+
+## Dialogs
+
+### showError()
+
+Displays a red error box.
+
+<ParamField path="title" type="string" required>
+  The title/first line of the box.
+</ParamField>
+
+<ParamField path="message" type="string" required>
+  The message/second line of the box.
+</ParamField>
+
+```javascript
+ui.showError('Invalid Input', 'Please enter a valid number.');
+ui.showError('Action Failed', 'Not enough cash!');
+```
+
+### showTextInput()
+
+Shows a text input prompt.
+
+<ParamField path="desc" type="TextInputDesc" required>
+  Parameters for the text input window.
+</ParamField>
+
+```javascript
+ui.showTextInput({
+  title: 'Enter Park Name',
+  description: 'What would you like to name your park?',
+  initialValue: park.name,
+  maxLength: 32,
+  callback: (value) => {
+    park.name = value;
+    console.log(`Park renamed to: ${value}`);
+  }
+});
+```
+
+### showFileBrowse()
+
+Shows a file browse window.
+
+<ParamField path="desc" type="FileBrowseDesc" required>
+  Parameters for the file browse window.
+</ParamField>
+
+```javascript
+ui.showFileBrowse({
+  type: 'load',
+  fileType: 'game',
+  defaultPath: '/saves/mypark.sv6',
+  callback: (path) => {
+    console.log(`Selected file: ${path}`);
+  }
+});
+```
+
+### showScenarioSelect()
+
+Shows the scenario select window.
+
+<ParamField path="desc" type="ScenarioSelectDesc" required>
+  Parameters for the scenario select window.
+</ParamField>
+
+```javascript
+ui.showScenarioSelect({
+  callback: (scenario) => {
+    console.log(`Selected: ${scenario.name}`);
+    console.log(`Path: ${scenario.path}`);
+  }
+});
+```
+
+## Tools
+
+### activateTool()
+
+Begins a new tool session with custom cursor and event handlers.
+
+<ParamField path="tool" type="ToolDesc" required>
+  The properties and event handlers for the tool.
+</ParamField>
+
+```javascript
+ui.activateTool({
+  id: 'my-tool',
+  cursor: 'cross_hair',
+  filter: ['terrain', 'entity'],
+  
+  onStart: () => {
+    console.log('Tool started');
+  },
+  
+  onDown: (e) => {
+    if (e.mapCoords) {
+      console.log(`Clicked at: (${e.mapCoords.x}, ${e.mapCoords.y})`);
+    }
+  },
+  
+  onMove: (e) => {
+    if (e.mapCoords) {
+      // Update preview or highlight
+    }
+  },
+  
+  onUp: (e) => {
+    console.log('Mouse released');
+  },
+  
+  onFinish: () => {
+    console.log('Tool finished');
+  }
+});
+```
+
+<Tabs>
+  <Tab title="Tile Selector">
+    ```javascript
+    ui.activateTool({
+      id: 'tile-selector',
+      cursor: 'cross_hair',
+      filter: ['terrain'],
+      
+      onDown: (e) => {
+        if (e.mapCoords) {
+          const tileX = Math.floor(e.mapCoords.x / 32);
+          const tileY = Math.floor(e.mapCoords.y / 32);
+          const tile = map.getTile(tileX, tileY);
+          
+          console.log(`Selected tile: (${tileX}, ${tileY})`);
+          console.log(`Elements: ${tile.numElements}`);
+        }
+      }
+    });
+    ```
+  </Tab>
+  <Tab title="Entity Inspector">
+    ```javascript
+    ui.activateTool({
+      id: 'entity-inspector',
+      cursor: 'picker',
+      filter: ['entity'],
+      
+      onDown: (e) => {
+        if (e.entityId !== undefined) {
+          const entity = map.getEntity(e.entityId);
+          if (entity) {
+            console.log(`Entity: ${entity.type}`);
+            if (entity.type === 'guest') {
+              console.log(`Name: ${entity.name}`);
+              console.log(`Happiness: ${entity.happiness}`);
+            }
+          }
+        }
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Menu Items
+
+### registerMenuItem()
+
+Registers a new item in the game's main menu.
+
+<ParamField path="text" type="string" required>
+  The menu item text.
+</ParamField>
+
+<ParamField path="callback" type="Function" required>
+  The function to call when clicked.
+</ParamField>
+
+```javascript
+ui.registerMenuItem('My Plugin', () => {
+  console.log('Menu item clicked');
+  ui.openWindow({
+    classification: 'plugin-window',
+    title: 'My Plugin',
+    width: 400,
+    height: 300,
+    widgets: []
+  });
+});
+```
+
+### registerToolboxMenuItem()
+
+Registers a new item in the toolbox menu on the title screen.
+
+<Note>
+Only available to intransient plugins.
+</Note>
+
+<ParamField path="text" type="string" required>
+  The menu item text.
+</ParamField>
+
+<ParamField path="callback" type="Function" required>
+  The function to call when clicked.
+</ParamField>
+
+```javascript
+ui.registerToolboxMenuItem('Launch Custom Scenario', () => {
+  console.log('Toolbox item clicked');
+});
+```
+
+## Shortcuts
+
+### registerShortcut()
+
+Registers a keyboard shortcut.
+
+<ParamField path="desc" type="ShortcutDesc" required>
+  The shortcut descriptor.
+</ParamField>
+
+```javascript
+ui.registerShortcut({
+  id: 'myplugin.togglewindow',
+  text: 'Toggle My Window',
+  bindings: ['CTRL+SHIFT+M'],
+  callback: () => {
+    const window = ui.getWindow('my-window');
+    if (window) {
+      window.close();
+    } else {
+      ui.openWindow({
+        classification: 'my-window',
+        title: 'My Window',
+        width: 300,
+        height: 200,
+        widgets: []
+      });
+    }
+  }
+});
+```
+
+## Usage Examples
+
+### Park Statistics Window
+
+```javascript
+function openStatsWindow() {
+  ui.openWindow({
+    classification: 'park-stats',
+    title: 'Park Statistics',
+    width: 400,
+    height: 350,
+    widgets: [
+      {
+        type: 'label',
+        x: 10,
+        y: 20,
+        width: 380,
+        height: 14,
+        text: `Park Name: ${park.name}`
+      },
+      {
+        type: 'label',
+        x: 10,
+        y: 40,
+        width: 380,
+        height: 14,
+        text: `Rating: ${park.rating}`
+      },
+      {
+        type: 'label',
+        x: 10,
+        y: 60,
+        width: 380,
+        height: 14,
+        text: `Guests: ${park.guests}`
+      },
+      {
+        type: 'label',
+        x: 10,
+        y: 80,
+        width: 380,
+        height: 14,
+        text: `Cash: £${(park.cash / 10).toFixed(2)}`
+      },
+      {
+        type: 'button',
+        x: 150,
+        y: 120,
+        width: 100,
+        height: 24,
+        text: 'Refresh',
+        onClick: () => {
+          ui.closeWindows('park-stats');
+          openStatsWindow();
+        }
+      }
+    ],
+    onUpdate: function() {
+      // Update window contents periodically
+    }
+  });
+}
+
+ui.registerMenuItem('Park Stats', openStatsWindow);
+```
+
+### Guest Finder Tool
+
+```javascript
+ui.registerMenuItem('Find Guest', () => {
+  ui.showTextInput({
+    title: 'Find Guest',
+    description: 'Enter guest name:',
+    maxLength: 32,
+    callback: (name) => {
+      const guests = map.getAllEntities('guest');
+      const found = guests.find(g => g.name === name);
+      
+      if (found) {
+        ui.mainViewport.scrollTo({ x: found.x, y: found.y, z: found.z });
+        console.log(`Found ${name} at (${found.x}, ${found.y})`);
+      } else {
+        ui.showError('Not Found', `Guest "${name}" not found.`);
+      }
+    }
+  });
+});
+```
+
+### Custom Paint Tool
+
+```javascript
+ui.registerMenuItem('Paint Tool', () => {
+  ui.activateTool({
+    id: 'paint-tool',
+    cursor: 'paintbrush',
+    filter: ['terrain'],
+    
+    onDown: (e) => {
+      if (e.mapCoords) {
+        const tileX = Math.floor(e.mapCoords.x / 32);
+        const tileY = Math.floor(e.mapCoords.y / 32);
+        
+        // Modify tile appearance
+        console.log(`Painting tile: (${tileX}, ${tileY})`);
+      }
+    }
+  });
+});
+```
+
+## Window Object
+
+Windows returned by `openWindow()` and `getWindow()` have these properties and methods:
+
+<ResponseField name="classification" type="number" readonly>
+  The window classification.
+</ResponseField>
+
+<ResponseField name="number" type="number" readonly>
+  The window number.
+</ResponseField>
+
+<ResponseField name="x" type="number">
+  The x position of the window.
+</ResponseField>
+
+<ResponseField name="y" type="number">
+  The y position of the window.
+</ResponseField>
+
+<ResponseField name="width" type="number">
+  The width of the window.
+</ResponseField>
+
+<ResponseField name="height" type="number">
+  The height of the window.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  The window title.
+</ResponseField>
+
+<ResponseField name="widgets" type="Widget[]" readonly>
+  The widgets in the window.
+</ResponseField>
+
+<ResponseField name="colours" type="number[]">
+  The window colour palette.
+</ResponseField>
+
+<ResponseField name="tabIndex" type="number">
+  The currently selected tab index.
+</ResponseField>
+
+### close()
+
+Closes the window.
+
+```javascript
+const window = ui.getWindow('my-window');
+if (window) {
+  window.close();
+}
+```
+
+### bringToFront()
+
+Brings the window to the front.
+
+```javascript
+window.bringToFront();
+```
+
+### findWidget()
+
+Finds a widget by name.
+
+<ParamField path="name" type="string" required>
+  The widget name.
+</ParamField>
+
+```javascript
+const button = window.findWidget('myButton');
+button.text = 'New Text';
+```

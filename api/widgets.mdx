@@ -1,0 +1,615 @@
+---
+title: Widget System
+description: Widget APIs for creating custom UI elements in OpenRCT2
+---
+
+Widgets are UI elements that can be placed in custom windows. OpenRCT2 provides a variety of widget types for building interactive interfaces.
+
+## Widget Types
+
+Available widget types:
+- `"button"` - Clickable button
+- `"checkbox"` - Checkbox with label
+- `"colourpicker"` - Colour selection widget
+- `"custom"` - Custom drawable widget
+- `"dropdown"` - Dropdown selection list
+- `"groupbox"` - Visual grouping box
+- `"label"` - Static text label
+- `"listview"` - Scrollable list with columns
+- `"spinner"` - Numeric spinner with +/- buttons
+- `"textbox"` - Text input field
+- `"viewport"` - Embedded viewport
+
+## Base Widget Properties
+
+All widgets share these common properties:
+
+<ResponseField name="type" type="WidgetType" readonly>
+  The widget type.
+</ResponseField>
+
+<ResponseField name="window" type="Window" readonly>
+  The window containing this widget.
+</ResponseField>
+
+<ResponseField name="x" type="number">
+  The x position relative to the window.
+</ResponseField>
+
+<ResponseField name="y" type="number">
+  The y position relative to the window.
+</ResponseField>
+
+<ResponseField name="width" type="number">
+  The width in pixels.
+</ResponseField>
+
+<ResponseField name="height" type="number">
+  The height in pixels.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The widget name (used with findWidget).
+</ResponseField>
+
+<ResponseField name="tooltip" type="string">
+  The tooltip text shown on hover.
+</ResponseField>
+
+<ResponseField name="isDisabled" type="boolean">
+  Whether the widget is disabled.
+</ResponseField>
+
+<ResponseField name="isVisible" type="boolean">
+  Whether the widget is visible.
+</ResponseField>
+
+## Button Widget
+
+Clickable button with text or image.
+
+```javascript
+{
+  type: 'button',
+  name: 'myButton',
+  x: 10,
+  y: 20,
+  width: 100,
+  height: 24,
+  text: 'Click Me',
+  border: true,
+  onClick: () => {
+    console.log('Button clicked!');
+  }
+}
+```
+
+<Expandable title="Button Properties">
+  <ResponseField name="text" type="string">
+    The button text.
+  </ResponseField>
+  <ResponseField name="image" type="number | IconName">
+    The button image/icon.
+  </ResponseField>
+  <ResponseField name="border" type="boolean">
+    Whether the button has a 3D border. Default: true for text, false for images.
+  </ResponseField>
+  <ResponseField name="isPressed" type="boolean">
+    Whether the button appears pressed.
+  </ResponseField>
+</Expandable>
+
+<Tabs>
+  <Tab title="Text Button">
+    ```javascript
+    {
+      type: 'button',
+      x: 10,
+      y: 10,
+      width: 100,
+      height: 24,
+      text: 'Save',
+      onClick: () => {
+        // Save action
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Icon Button">
+    ```javascript
+    {
+      type: 'button',
+      x: 120,
+      y: 10,
+      width: 24,
+      height: 24,
+      image: 'guests',
+      tooltip: 'View Guests',
+      onClick: () => {
+        // Show guests
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Checkbox Widget
+
+Checkbox with label.
+
+```javascript
+{
+  type: 'checkbox',
+  name: 'pauseCheckbox',
+  x: 10,
+  y: 20,
+  width: 200,
+  height: 14,
+  text: 'Pause Game',
+  isChecked: false,
+  onChange: (checked) => {
+    context.paused = checked;
+  }
+}
+```
+
+<Expandable title="Checkbox Properties">
+  <ResponseField name="text" type="string">
+    The checkbox label text.
+  </ResponseField>
+  <ResponseField name="isChecked" type="boolean">
+    Whether the checkbox is checked.
+  </ResponseField>
+</Expandable>
+
+## Colour Picker Widget
+
+Colour selection widget.
+
+```javascript
+{
+  type: 'colourpicker',
+  name: 'colourPicker',
+  x: 10,
+  y: 20,
+  width: 24,
+  height: 24,
+  colour: 0,
+  onChange: (colour) => {
+    console.log(`Selected colour: ${colour}`);
+  }
+}
+```
+
+<Expandable title="Colour Picker Properties">
+  <ResponseField name="colour" type="number">
+    The selected colour (0-31).
+  </ResponseField>
+</Expandable>
+
+## Custom Widget
+
+Custom drawable widget with full control.
+
+```javascript
+{
+  type: 'custom',
+  name: 'customWidget',
+  x: 10,
+  y: 20,
+  width: 200,
+  height: 100,
+  onDraw: function(g) {
+    g.colour = 1;
+    g.rect(0, 0, this.width, this.height);
+    g.text('Custom Content', 10, 10);
+  }
+}
+```
+
+<Note>
+The graphics context provides methods for drawing shapes and text.
+</Note>
+
+## Dropdown Widget
+
+Dropdown selection list.
+
+```javascript
+{
+  type: 'dropdown',
+  name: 'modeDropdown',
+  x: 10,
+  y: 20,
+  width: 150,
+  height: 24,
+  items: ['Normal', 'Testing', 'Closed'],
+  selectedIndex: 0,
+  onChange: (index) => {
+    console.log(`Selected: ${index}`);
+  }
+}
+```
+
+<Expandable title="Dropdown Properties">
+  <ResponseField name="items" type="string[]">
+    The list of dropdown items.
+  </ResponseField>
+  <ResponseField name="selectedIndex" type="number">
+    The index of the selected item.
+  </ResponseField>
+  <ResponseField name="text" type="string">
+    The currently displayed text.
+  </ResponseField>
+</Expandable>
+
+## Group Box Widget
+
+Visual grouping box with border and label.
+
+```javascript
+{
+  type: 'groupbox',
+  x: 10,
+  y: 20,
+  width: 200,
+  height: 100,
+  text: 'Options'
+}
+```
+
+<Expandable title="Group Box Properties">
+  <ResponseField name="text" type="string">
+    The group box label.
+  </ResponseField>
+</Expandable>
+
+## Label Widget
+
+Static text label.
+
+```javascript
+{
+  type: 'label',
+  x: 10,
+  y: 20,
+  width: 200,
+  height: 14,
+  text: 'Park Rating: 999',
+  textAlign: 'left'
+}
+```
+
+<Expandable title="Label Properties">
+  <ResponseField name="text" type="string">
+    The label text.
+  </ResponseField>
+  <ResponseField name="textAlign" type="TextAlignment">
+    Text alignment: "left" or "centred".
+  </ResponseField>
+</Expandable>
+
+## List View Widget
+
+Scrollable list with columns and rows.
+
+```javascript
+{
+  type: 'listview',
+  name: 'guestList',
+  x: 10,
+  y: 20,
+  width: 380,
+  height: 200,
+  scrollbars: 'vertical',
+  isStriped: true,
+  showColumnHeaders: true,
+  columns: [
+    { header: 'Name', width: 150 },
+    { header: 'Happiness', width: 80 },
+    { header: 'Cash', width: 150 }
+  ],
+  items: [
+    ['John Smith', '255', '£50.00'],
+    ['Jane Doe', '200', '£100.00']
+  ],
+  canSelect: true,
+  onClick: (item, column) => {
+    console.log(`Clicked row ${item}, column ${column}`);
+  }
+}
+```
+
+<Expandable title="List View Properties">
+  <ResponseField name="scrollbars" type="ScrollbarType">
+    Scrollbar type: "none", "horizontal", "vertical", "both".
+  </ResponseField>
+  <ResponseField name="isStriped" type="boolean">
+    Whether to show alternating row colours.
+  </ResponseField>
+  <ResponseField name="showColumnHeaders" type="boolean">
+    Whether to show column headers.
+  </ResponseField>
+  <ResponseField name="columns" type="ListViewColumn[]">
+    Column definitions.
+  </ResponseField>
+  <ResponseField name="items" type="ListViewItem[]">
+    Row items (arrays of strings or separator objects).
+  </ResponseField>
+  <ResponseField name="selectedCell" type="RowColumn | null">
+    The currently selected cell.
+  </ResponseField>
+  <ResponseField name="highlightedCell" type="RowColumn" readonly>
+    The currently highlighted cell.
+  </ResponseField>
+  <ResponseField name="canSelect" type="boolean">
+    Whether rows can be selected.
+  </ResponseField>
+</Expandable>
+
+## Spinner Widget
+
+Numeric spinner with increment/decrement buttons.
+
+```javascript
+{
+  type: 'spinner',
+  name: 'valueSpinner',
+  x: 10,
+  y: 20,
+  width: 150,
+  height: 24,
+  text: 'Value: 100',
+  onIncrement: () => {
+    // Increase value
+  },
+  onDecrement: () => {
+    // Decrease value
+  }
+}
+```
+
+<Expandable title="Spinner Properties">
+  <ResponseField name="text" type="string">
+    The displayed text.
+  </ResponseField>
+</Expandable>
+
+## Text Box Widget
+
+Text input field.
+
+```javascript
+{
+  type: 'textbox',
+  name: 'nameInput',
+  x: 10,
+  y: 20,
+  width: 200,
+  height: 24,
+  text: '',
+  maxLength: 32,
+  onChange: (text) => {
+    console.log(`Text changed: ${text}`);
+  }
+}
+```
+
+<Expandable title="Text Box Properties">
+  <ResponseField name="text" type="string">
+    The current text.
+  </ResponseField>
+  <ResponseField name="maxLength" type="number">
+    Maximum text length.
+  </ResponseField>
+</Expandable>
+
+### focus()
+
+Sets keyboard focus to the text box.
+
+```javascript
+const textbox = window.findWidget('nameInput');
+textbox.focus();
+```
+
+## Viewport Widget
+
+Embedded viewport showing the game world.
+
+```javascript
+{
+  type: 'viewport',
+  name: 'minimap',
+  x: 10,
+  y: 20,
+  width: 200,
+  height: 150
+}
+```
+
+<Expandable title="Viewport Properties">
+  <ResponseField name="viewport" type="Viewport" readonly>
+    The viewport object.
+  </ResponseField>
+</Expandable>
+
+## Usage Examples
+
+### Interactive Settings Panel
+
+```javascript
+const settings = {
+  pauseOnOpen: false,
+  autoSave: true,
+  volume: 50
+};
+
+ui.openWindow({
+  classification: 'settings',
+  title: 'Settings',
+  width: 300,
+  height: 200,
+  widgets: [
+    {
+      type: 'checkbox',
+      name: 'pauseCheckbox',
+      x: 10,
+      y: 20,
+      width: 280,
+      height: 14,
+      text: 'Pause on window open',
+      isChecked: settings.pauseOnOpen,
+      onChange: (checked) => {
+        settings.pauseOnOpen = checked;
+      }
+    },
+    {
+      type: 'checkbox',
+      x: 10,
+      y: 40,
+      width: 280,
+      height: 14,
+      text: 'Auto-save enabled',
+      isChecked: settings.autoSave,
+      onChange: (checked) => {
+        settings.autoSave = checked;
+      }
+    },
+    {
+      type: 'spinner',
+      x: 10,
+      y: 70,
+      width: 150,
+      height: 24,
+      text: `Volume: ${settings.volume}`,
+      onIncrement: function() {
+        settings.volume = Math.min(100, settings.volume + 10);
+        this.text = `Volume: ${settings.volume}`;
+      },
+      onDecrement: function() {
+        settings.volume = Math.max(0, settings.volume - 10);
+        this.text = `Volume: ${settings.volume}`;
+      }
+    },
+    {
+      type: 'button',
+      x: 100,
+      y: 120,
+      width: 100,
+      height: 24,
+      text: 'Apply',
+      onClick: () => {
+        console.log('Settings applied:', settings);
+        ui.closeWindows('settings');
+      }
+    }
+  ]
+});
+```
+
+### Guest List Window
+
+```javascript
+function openGuestList() {
+  const guests = map.getAllEntities('guest');
+  const items = guests.map(g => [
+    g.name,
+    g.happiness.toString(),
+    `£${(g.cash / 10).toFixed(2)}`
+  ]);
+  
+  ui.openWindow({
+    classification: 'guest-list',
+    title: 'Guest List',
+    width: 400,
+    height: 400,
+    widgets: [
+      {
+        type: 'listview',
+        x: 5,
+        y: 20,
+        width: 390,
+        height: 340,
+        scrollbars: 'vertical',
+        isStriped: true,
+        showColumnHeaders: true,
+        columns: [
+          { header: 'Name', width: 150 },
+          { header: 'Happiness', width: 100 },
+          { header: 'Cash', width: 140 }
+        ],
+        items: items,
+        canSelect: true,
+        onClick: (row, col) => {
+          const guest = guests[row];
+          ui.mainViewport.scrollTo({ 
+            x: guest.x, 
+            y: guest.y, 
+            z: guest.z 
+          });
+        }
+      },
+      {
+        type: 'button',
+        x: 150,
+        y: 370,
+        width: 100,
+        height: 24,
+        text: 'Refresh',
+        onClick: () => {
+          ui.closeWindows('guest-list');
+          openGuestList();
+        }
+      }
+    ]
+  });
+}
+```
+
+### Custom Graph Widget
+
+```javascript
+ui.openWindow({
+  classification: 'graph',
+  title: 'Park Rating History',
+  width: 400,
+  height: 300,
+  widgets: [
+    {
+      type: 'custom',
+      x: 10,
+      y: 20,
+      width: 380,
+      height: 260,
+      onDraw: function(g) {
+        // Draw graph background
+        g.colour = 12;
+        g.box(0, 0, this.width, this.height);
+        
+        // Draw grid lines
+        g.colour = 10;
+        for (let i = 0; i < 10; i++) {
+          const y = i * (this.height / 10);
+          g.line(0, y, this.width, y);
+        }
+        
+        // Draw rating data (example)
+        g.colour = 2;
+        const data = [700, 750, 800, 780, 820, 850, 870, 900, 920, 950];
+        for (let i = 1; i < data.length; i++) {
+          const x1 = (i - 1) * (this.width / (data.length - 1));
+          const y1 = this.height - (data[i - 1] / 1000 * this.height);
+          const x2 = i * (this.width / (data.length - 1));
+          const y2 = this.height - (data[i] / 1000 * this.height);
+          g.line(x1, y1, x2, y2);
+        }
+        
+        // Draw labels
+        g.colour = 0;
+        g.text('Rating', 5, 5);
+      }
+    }
+  ]
+});
+```
