@@ -1,0 +1,206 @@
+---
+title: "Cheats API"
+description: "Control game cheats programmatically"
+---
+
+The `cheats` global provides access to all game cheats. Cheats modify game behavior for testing, debugging, or fun.
+
+<Note>
+Cheats can only be enabled in single-player mode or on servers where cheats are allowed. The cheat menu must be enabled in the game settings.
+</Note>
+
+## Properties
+
+All properties are boolean flags that enable or disable specific cheats, except where noted.
+
+### Sandbox & Building
+
+<ParamField path="sandboxMode" type="boolean">
+  Enables sandbox mode with unrestricted building capabilities
+</ParamField>
+
+<ParamField path="buildInPauseMode" type="boolean">
+  Allows building and editing while the game is paused
+</ParamField>
+
+<ParamField path="disableClearanceChecks" type="boolean">
+  Disables collision detection for rides and scenery
+</ParamField>
+
+<ParamField path="disableSupportLimits" type="boolean">
+  Removes support height limits for rides
+</ParamField>
+
+<ParamField path="allowTrackPlaceInvalidHeights" type="boolean">
+  Allows track placement at any height
+</ParamField>
+
+### Ride Restrictions
+
+<ParamField path="ignoreRideIntensity" type="boolean">
+  Guests will ride attractions regardless of intensity preferences
+</ParamField>
+
+<ParamField path="ignoreRidePrice" type="boolean">
+  Guests will pay any price for rides
+</ParamField>
+
+<ParamField path="allowArbitraryRideTypeChanges" type="boolean">
+  Allows changing ride types to incompatible track layouts
+</ParamField>
+
+<ParamField path="disableTrainLengthLimit" type="boolean">
+  Removes train length restrictions
+</ParamField>
+
+<ParamField path="enableAllDrawableTrackPieces" type="boolean">
+  Makes all track pieces available regardless of ride type
+</ParamField>
+
+<ParamField path="enableChainLiftOnAllTrack" type="boolean">
+  Allows chain lift on any track piece
+</ParamField>
+
+<ParamField path="fastLiftHill" type="boolean">
+  Increases lift hill speed
+</ParamField>
+
+<ParamField path="showAllOperatingModes" type="boolean">
+  Shows all operating modes for rides
+</ParamField>
+
+<ParamField path="showVehiclesFromOtherTrackTypes" type="boolean">
+  Shows vehicles from other ride types in the vehicle selection
+</ParamField>
+
+<ParamField path="disableAllBreakdowns" type="boolean">
+  Prevents all ride breakdowns
+</ParamField>
+
+<ParamField path="disableBrakesFailure" type="boolean">
+  Prevents brake failures specifically
+</ParamField>
+
+<ParamField path="disableRideValueAging" type="boolean">
+  Prevents ride excitement ratings from decreasing over time
+</ParamField>
+
+### Park Management
+
+<ParamField path="forcedParkRating" type="number">
+  Forces the park rating to a specific value (0-999). Set to -1 to disable
+</ParamField>
+
+<ParamField path="neverendingMarketing" type="boolean">
+  Marketing campaigns never expire
+</ParamField>
+
+<ParamField path="makeAllDestructible" type="boolean">
+  Allows deletion of normally protected scenery and structures
+</ParamField>
+
+### Guest Behavior
+
+<ParamField path="disableLittering" type="boolean">
+  Prevents guests from littering
+</ParamField>
+
+<ParamField path="disableVandalism" type="boolean">
+  Prevents guests from vandalizing park property
+</ParamField>
+
+### Scenery & Environment
+
+<ParamField path="allowSpecialColourSchemes" type="boolean">
+  Enables special color schemes for rides and scenery
+</ParamField>
+
+<ParamField path="disablePlantAging" type="boolean">
+  Prevents plants from requiring maintenance
+</ParamField>
+
+<ParamField path="freezeWeather" type="boolean">
+  Stops weather from changing
+</ParamField>
+
+### Research & Development
+
+<ParamField path="ignoreResearchStatus" type="boolean">
+  Makes all rides and scenery available regardless of research progress
+</ParamField>
+
+### Paths
+
+<ParamField path="allowRegularPathAsQueue" type="boolean">
+  Allows regular paths to be used as queue lines
+</ParamField>
+
+## Usage Examples
+
+### Enable Sandbox Mode
+
+```javascript
+// Enable sandbox mode for unlimited building
+cheats.sandboxMode = true;
+cheats.disableClearanceChecks = true;
+cheats.buildInPauseMode = true;
+```
+
+### Testing Ride Behavior
+
+```javascript
+// Make guests ride everything
+cheats.ignoreRideIntensity = true;
+cheats.ignoreRidePrice = true;
+
+// Prevent breakdowns during testing
+cheats.disableAllBreakdowns = true;
+```
+
+### Force Park Rating
+
+```javascript
+// Set park rating to maximum
+cheats.forcedParkRating = 999;
+
+// Disable forced rating (use actual rating)
+cheats.forcedParkRating = -1;
+```
+
+### Enable All Features
+
+```javascript
+// Make everything available for creative building
+cheats.ignoreResearchStatus = true;
+cheats.showAllOperatingModes = true;
+cheats.showVehiclesFromOtherTrackTypes = true;
+cheats.enableAllDrawableTrackPieces = true;
+```
+
+### Guest Management
+
+```javascript
+// Create a perfectly clean park
+cheats.disableLittering = true;
+cheats.disableVandalism = true;
+```
+
+## Multiplayer Considerations
+
+<Warning>
+In multiplayer, cheats can only be modified on the server. Clients cannot change cheat values. The server must have cheats enabled in its configuration.
+</Warning>
+
+```javascript
+// Check if running on server
+if (network.mode === "server") {
+    cheats.sandboxMode = true;
+    console.log("Sandbox mode enabled on server");
+}
+```
+
+## Related APIs
+
+- [Park API](/api/park) - Park management and finances
+- [Climate API](/api/climate) - Weather control (use with `freezeWeather`)
+- [Network API](/api/network) - Multiplayer server management

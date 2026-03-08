@@ -1,0 +1,284 @@
+---
+title: "Object Manager API"
+description: "Load and manage game objects (rides, scenery, vehicles)"
+---
+
+The `objectManager` global provides access to installed and loaded game objects. Objects include rides, scenery, vehicles, and other park elements.
+
+## Properties
+
+<ParamField path="installedObjects" type="InstalledObject[]" readonly>
+  Array of all objects that are installed and can be loaded into the park
+</ParamField>
+
+## Methods
+
+### getInstalledObject
+
+Gets an installed object by its identifier.
+
+```javascript
+getInstalledObject(identifier: string): InstalledObject | null
+```
+
+<ParamField path="identifier" type="string" required>
+  The object identifier (e.g., "rct2.ride.twist1", "rct2.scenery.tl0")
+</ParamField>
+
+**Returns:** The installed object, or `null` if not found.
+
+### load (single object)
+
+Loads an object into the current park at a specific index.
+
+```javascript
+load(identifier: string, index?: number): LoadedObject | null
+```
+
+<ParamField path="identifier" type="string" required>
+  The object identifier to load
+</ParamField>
+
+<ParamField path="index" type="number">
+  The index to load the object at. If not provided, an empty slot will be used. If an object exists at this index, it will be replaced (if the type matches)
+</ParamField>
+
+**Returns:** The loaded object, or `null` if loading failed.
+
+### load (multiple objects)
+
+Loads multiple objects into the current park.
+
+```javascript
+load(identifiers: string[]): (LoadedObject | null)[]
+```
+
+<ParamField path="identifiers" type="string[]" required>
+  Array of object identifiers to load
+</ParamField>
+
+**Returns:** Array of loaded objects (or `null` for each that failed to load).
+
+### unload
+
+Unloads an object from the current park.
+
+```javascript
+unload(identifier: string): void
+```
+
+<ParamField path="identifier" type="string" required>
+  The object identifier to unload
+</ParamField>
+
+## Types
+
+### InstalledObject
+
+Represents an object that is installed and available to load.
+
+<ResponseField name="identifier" type="string">
+  Unique object identifier (e.g., "rct2.ride.twist1")
+</ResponseField>
+
+<ResponseField name="legacyIdentifier" type="string">
+  Legacy 8-character identifier for RCT1/RCT2 objects
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Object type: "ride", "small_scenery", "large_scenery", "wall", "banner", "footpath", "footpath_addition", "scenery_group", "park_entrance", "water", "terrain_surface", "terrain_edge", "station", "music", "footpath_surface", "footpath_railings"
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Display name of the object
+</ResponseField>
+
+<ResponseField name="version" type="string">
+  Object version
+</ResponseField>
+
+<ResponseField name="authors" type="string[]">
+  List of object authors
+</ResponseField>
+
+### LoadedObject
+
+Represents an object that is currently loaded in the park.
+
+<ResponseField name="identifier" type="string">
+  Object identifier
+</ResponseField>
+
+<ResponseField name="index" type="number">
+  The index where the object is loaded
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Object type
+</ResponseField>
+
+## Usage Examples
+
+### List All Installed Rides
+
+```javascript
+// Get all installed ride objects
+const rides = objectManager.installedObjects.filter(obj => obj.type === "ride");
+
+console.log(`Found ${rides.length} installed rides:`);
+rides.forEach(ride => {
+    console.log(`- ${ride.name} (${ride.identifier})`);
+});
+```
+
+### Check if Object is Installed
+
+```javascript
+function isObjectInstalled(identifier) {
+    const obj = objectManager.getInstalledObject(identifier);
+    return obj !== null;
+}
+
+if (isObjectInstalled("rct2.ride.twist1")) {
+    console.log("Twist coaster is installed");
+}
+```
+
+### Load Custom Objects
+
+```javascript
+// Load a specific ride
+const loadedRide = objectManager.load("rct2.ride.bmvd");
+
+if (loadedRide) {
+    console.log(`Loaded ${loadedRide.identifier} at index ${loadedRide.index}`);
+} else {
+    console.log("Failed to load ride");
+}
+```
+
+### Load Multiple Objects
+
+```javascript
+// Load several scenery objects at once
+const sceneryIds = [
+    "rct2.scenery.tl0",
+    "rct2.scenery.tl1",
+    "rct2.scenery.tl2"
+];
+
+const results = objectManager.load(sceneryIds);
+
+results.forEach((obj, i) => {
+    if (obj) {
+        console.log(`Loaded ${sceneryIds[i]} successfully`);
+    } else {
+        console.log(`Failed to load ${sceneryIds[i]}`);
+    }
+});
+```
+
+### Replace an Object
+
+```javascript
+// Replace an object at a specific index
+// This unloads the old object and loads the new one
+const newRide = objectManager.load("custom.ride.newcoaster", 10);
+
+if (newRide) {
+    console.log(`Replaced object at index 10 with ${newRide.identifier}`);
+}
+```
+
+### Unload Objects
+
+```javascript
+// Unload an object when no longer needed
+objectManager.unload("rct2.ride.twist1");
+console.log("Ride unloaded");
+```
+
+### Get Object Information
+
+```javascript
+// Get detailed information about an installed object
+const obj = objectManager.getInstalledObject("rct2.ride.bmvd");
+
+if (obj) {
+    console.log("Object Information:");
+    console.log(`Name: ${obj.name}`);
+    console.log(`Type: ${obj.type}`);
+    console.log(`Version: ${obj.version}`);
+    console.log(`Authors: ${obj.authors.join(", ")}`);
+    console.log(`Legacy ID: ${obj.legacyIdentifier}`);
+}
+```
+
+### List Objects by Type
+
+```javascript
+function getObjectsByType(type) {
+    return objectManager.installedObjects.filter(obj => obj.type === type);
+}
+
+// Get all scenery groups
+const sceneryGroups = getObjectsByType("scenery_group");
+console.log(`Found ${sceneryGroups.length} scenery groups`);
+
+// Get all footpath types
+const footpaths = getObjectsByType("footpath");
+console.log(`Found ${footpaths.length} footpath types`);
+```
+
+### Plugin: Auto-Load Required Objects
+
+```javascript
+// Plugin that ensures required objects are loaded
+const REQUIRED_OBJECTS = [
+    "rct2.ride.bmvd",
+    "rct2.scenery.tl0",
+    "rct2.footpath.tarmac"
+];
+
+function ensureObjectsLoaded() {
+    const toLoad = [];
+    
+    REQUIRED_OBJECTS.forEach(id => {
+        const obj = objectManager.getInstalledObject(id);
+        if (obj) {
+            toLoad.push(id);
+        } else {
+            console.log(`Warning: Required object ${id} is not installed`);
+        }
+    });
+    
+    if (toLoad.length > 0) {
+        const results = objectManager.load(toLoad);
+        console.log(`Loaded ${results.filter(r => r !== null).length}/${toLoad.length} objects`);
+    }
+}
+
+// Load objects when park opens
+context.subscribe("map.load", () => {
+    ensureObjectsLoaded();
+});
+```
+
+## Notes
+
+<Note>
+- Object identifiers follow the format `source.type.id` (e.g., "rct2.ride.twist1")
+- Loading objects may fail if the object type doesn't match the index slot
+- Unloading objects that are in use may cause issues; ensure nothing in the park uses the object first
+- Some objects are built-in and cannot be unloaded
+</Note>
+
+<Warning>
+In multiplayer, only the server can load and unload objects. Changes will be synchronized to all clients.
+</Warning>
+
+## Related APIs
+
+- [Context API](/api/context) - Subscribe to map.load events
+- [Map API](/api/map) - Interact with placed objects in the park
+- [Rides API](/api/rides) - Work with loaded ride instances

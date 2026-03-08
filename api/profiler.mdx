@@ -1,0 +1,328 @@
+---
+title: "Profiler API"
+description: "Performance profiling and timing measurements"
+---
+
+The `profiler` global provides performance profiling capabilities for measuring execution time of game functions and plugin code.
+
+## Properties
+
+<ParamField path="enabled" type="boolean" readonly>
+  Whether the profiler is currently enabled and collecting data
+</ParamField>
+
+## Methods
+
+### start
+
+Starts the profiler and begins collecting performance data.
+
+```javascript
+profiler.start(): void
+```
+
+### stop
+
+Stops the profiler and halts data collection.
+
+```javascript
+profiler.stop(): void
+```
+
+### reset
+
+Resets all collected profiling data.
+
+```javascript
+profiler.reset(): void
+```
+
+### getData
+
+Retrieves all collected profiling data.
+
+```javascript
+profiler.getData(): ProfiledFunction[]
+```
+
+**Returns:** Array of profiled functions with timing information.
+
+## Types
+
+### ProfiledFunction
+
+Performance data for a single function.
+
+<ResponseField name="name" type="string">
+  Function name
+</ResponseField>
+
+<ResponseField name="callCount" type="number">
+  Number of times the function was called
+</ResponseField>
+
+<ResponseField name="minTime" type="number">
+  Minimum execution time in milliseconds
+</ResponseField>
+
+<ResponseField name="maxTime" type="number">
+  Maximum execution time in milliseconds
+</ResponseField>
+
+<ResponseField name="totalTime" type="number">
+  Total cumulative execution time in milliseconds
+</ResponseField>
+
+<ResponseField name="parents" type="number[]">
+  Indices of parent functions in the call stack
+</ResponseField>
+
+<ResponseField name="children" type="number[]">
+  Indices of child functions called by this function
+</ResponseField>
+
+## Usage Examples
+
+### Basic Profiling
+
+```javascript
+// Start profiling
+profiler.start();
+
+// Run game for some time or perform operations
+// ... gameplay happens ...
+
+// Stop and get results
+profiler.stop();
+const data = profiler.getData();
+
+console.log(`Profiled ${data.length} functions`);
+```
+
+### Analyze Performance
+
+```javascript
+// Get profiling data
+const data = profiler.getData();
+
+// Find slowest functions
+const sorted = data
+    .filter(f => f.callCount > 0)
+    .sort((a, b) => b.totalTime - a.totalTime);
+
+console.log("Top 10 slowest functions:");
+sorted.slice(0, 10).forEach((fn, i) => {
+    const avgTime = fn.totalTime / fn.callCount;
+    console.log(`${i + 1}. ${fn.name}`);
+    console.log(`   Calls: ${fn.callCount}`);
+    console.log(`   Avg: ${avgTime.toFixed(2)}ms`);
+    console.log(`   Min: ${fn.minTime.toFixed(2)}ms`);
+    console.log(`   Max: ${fn.maxTime.toFixed(2)}ms`);
+    console.log(`   Total: ${fn.totalTime.toFixed(2)}ms`);
+});
+```
+
+### Profile Specific Operations
+
+```javascript
+// Reset to clear previous data
+profiler.reset();
+profiler.start();
+
+// Perform specific operations to profile
+for (let i = 0; i < 100; i++) {
+    // Simulate some expensive operation
+    map.getAllEntities("guest");
+}
+
+profiler.stop();
+
+// Analyze results
+const data = profiler.getData();
+console.log("Profiling complete");
+```
+
+### Create Profiling Report
+
+```javascript
+function generateReport() {
+    const data = profiler.getData();
+    const totalFunctions = data.length;
+    const totalCalls = data.reduce((sum, fn) => sum + fn.callCount, 0);
+    const totalTime = data.reduce((sum, fn) => sum + fn.totalTime, 0);
+    
+    console.log("=== Performance Report ===");
+    console.log(`Functions: ${totalFunctions}`);
+    console.log(`Total Calls: ${totalCalls}`);
+    console.log(`Total Time: ${totalTime.toFixed(2)}ms`);
+    console.log("");
+    
+    // Group by time ranges
+    const ranges = {
+        fast: data.filter(f => f.totalTime < 1),
+        medium: data.filter(f => f.totalTime >= 1 && f.totalTime < 10),
+        slow: data.filter(f => f.totalTime >= 10)
+    };
+    
+    console.log("Performance Distribution:");
+    console.log(`Fast (<1ms): ${ranges.fast.length} functions`);
+    console.log(`Medium (1-10ms): ${ranges.medium.length} functions`);
+    console.log(`Slow (>10ms): ${ranges.slow.length} functions`);
+}
+
+profiler.stop();
+generateReport();
+```
+
+### Plugin Performance Monitor
+
+```javascript
+// Plugin that monitors performance over time
+let profileData = [];
+
+function startMonitoring() {
+    profiler.reset();
+    profiler.start();
+}
+
+function captureSnapshot() {
+    const data = profiler.getData();
+    const snapshot = {
+        timestamp: Date.now(),
+        functions: data.map(fn => ({
+            name: fn.name,
+            calls: fn.callCount,
+            time: fn.totalTime
+        }))
+    };
+    profileData.push(snapshot);
+    
+    // Keep only last 10 snapshots
+    if (profileData.length > 10) {
+        profileData.shift();
+    }
+}
+
+// Capture every 60 seconds
+context.subscribe("interval.day", () => {
+    captureSnapshot();
+});
+
+function showTrends() {
+    if (profileData.length < 2) {
+        console.log("Not enough data yet");
+        return;
+    }
+    
+    console.log("Performance Trends:");
+    const latest = profileData[profileData.length - 1];
+    const previous = profileData[profileData.length - 2];
+    
+    // Compare snapshots
+    latest.functions.forEach(fn => {
+        const prev = previous.functions.find(f => f.name === fn.name);
+        if (prev && fn.time > prev.time * 1.5) {
+            console.log(`⚠️ ${fn.name} is 50% slower than before`);
+        }
+    });
+}
+```
+
+### Check if Profiler is Available
+
+```javascript
+// Profiler may not be available in all builds
+if (typeof profiler !== 'undefined') {
+    console.log("Profiler is available");
+    console.log("Enabled:", profiler.enabled);
+} else {
+    console.log("Profiler is not available in this build");
+}
+```
+
+### Find Functions by Name
+
+```javascript
+function findFunction(name) {
+    const data = profiler.getData();
+    return data.filter(fn => fn.name.includes(name));
+}
+
+// Find all guest-related functions
+const guestFunctions = findFunction("guest");
+console.log(`Found ${guestFunctions.length} guest-related functions`);
+
+guestFunctions.forEach(fn => {
+    console.log(`${fn.name}: ${fn.callCount} calls, ${fn.totalTime.toFixed(2)}ms`);
+});
+```
+
+### Analyze Call Hierarchy
+
+```javascript
+function printCallTree(funcIndex, data, indent = 0) {
+    const fn = data[funcIndex];
+    if (!fn) return;
+    
+    const spaces = "  ".repeat(indent);
+    console.log(`${spaces}${fn.name} (${fn.callCount} calls, ${fn.totalTime.toFixed(2)}ms)`);
+    
+    // Print children
+    fn.children.forEach(childIdx => {
+        printCallTree(childIdx, data, indent + 1);
+    });
+}
+
+// Find root functions (those with no parents)
+const data = profiler.getData();
+data.forEach((fn, idx) => {
+    if (fn.parents.length === 0 && fn.callCount > 0) {
+        console.log("\nCall tree for:", fn.name);
+        printCallTree(idx, data);
+    }
+});
+```
+
+## Performance Tips
+
+<Tip>
+- Start the profiler only when needed, as it adds overhead
+- Use `reset()` to clear old data before starting a new profiling session
+- Profile during typical gameplay scenarios for representative data
+- Focus on functions with high `totalTime` and `callCount` for optimization
+</Tip>
+
+## Notes
+
+<Note>
+- The profiler measures internal game functions, not plugin code directly
+- Profiling adds performance overhead; don't leave it running permanently
+- Results are most useful when compared over time or across different scenarios
+- Not all OpenRCT2 builds include profiler support
+</Note>
+
+<Warning>
+The profiler measures game engine functions. To profile your plugin code, use JavaScript's `console.time()` and `console.timeEnd()` methods instead.
+</Warning>
+
+## Plugin Code Profiling
+
+For profiling your own plugin code, use JavaScript timing:
+
+```javascript
+// Time a specific operation
+console.time("myOperation");
+
+// Your code here
+for (let i = 0; i < 1000; i++) {
+    // ... do something ...
+}
+
+console.timeEnd("myOperation");
+// Output: myOperation: 15.234ms
+```
+
+## Related APIs
+
+- [Console API](/api/console) - Logging and debugging with console.time()
+- [Context API](/api/context) - Subscribe to intervals for periodic profiling

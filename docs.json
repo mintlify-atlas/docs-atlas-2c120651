@@ -93,7 +93,10 @@
             "pages": [
               "api/context",
               "api/console",
-              "api/network"
+              "api/network",
+              "api/cheats",
+              "api/objectmanager",
+              "api/profiler"
             ]
           },
           {
