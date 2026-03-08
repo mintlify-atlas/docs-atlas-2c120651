@@ -1,0 +1,137 @@
+{
+  "projectType": "general",
+  "projectName": "OpenRCT2",
+  "projectDescription": "An open-source re-implementation of RollerCoaster Tycoon 2 with multiplayer support and plugin system",
+  "theme": "aspen",
+  "primaryColor": "#92211c",
+  "lightColor": "#2d3f5e",
+  "darkColor": "#a3aea7",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Building from Source",
+            "pages": [
+              "building/overview",
+              "building/linux",
+              "building/macos",
+              "building/windows",
+              "building/wsl",
+              "building/msys2"
+            ]
+          },
+          {
+            "group": "Gameplay",
+            "pages": [
+              "gameplay/features",
+              "gameplay/multiplayer",
+              "gameplay/cheats"
+            ]
+          },
+          {
+            "group": "Scripting",
+            "pages": [
+              "scripting/introduction",
+              "scripting/getting-started",
+              "scripting/plugin-types",
+              "scripting/game-actions",
+              "scripting/hot-reload",
+              "scripting/examples"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/contributing",
+              "development/architecture",
+              "development/save-format",
+              "development/localization"
+            ]
+          },
+          {
+            "group": "Community",
+            "pages": [
+              "community/support",
+              "community/code-of-conduct",
+              "community/privacy"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Core APIs",
+            "pages": [
+              "api/context",
+              "api/console",
+              "api/network"
+            ]
+          },
+          {
+            "group": "Game State",
+            "pages": [
+              "api/park",
+              "api/map",
+              "api/scenario",
+              "api/date",
+              "api/climate"
+            ]
+          },
+          {
+            "group": "Entities",
+            "pages": [
+              "api/entities",
+              "api/guests",
+              "api/staff",
+              "api/rides"
+            ]
+          },
+          {
+            "group": "UI & Interface",
+            "pages": [
+              "api/ui",
+              "api/widgets",
+              "api/viewports"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Cross-platform game engine (Windows, Linux, macOS, Android)",
+    "Multiplayer support with server/client architecture",
+    "JavaScript plugin system with extensive scripting API",
+    "Improved graphics and modern platform support",
+    "Enhanced game mechanics and increased limits",
+    "Scenario and sandbox gameplay modes",
+    "Hot-reload plugin development workflow",
+    "Custom game actions for multiplayer-safe modifications"
+  ],
+  "publicApiSurface": [
+    "context - Core plugin APIs and lifecycle management",
+    "park - Park management and financial operations",
+    "map - Map manipulation and tile management",
+    "network - Multiplayer server/client networking",
+    "scenario - Scenario objectives and settings",
+    "climate - Weather and climate control",
+    "cheats - Cheat functionality",
+    "ui - User interface and window management",
+    "console - Logging and debugging",
+    "date - In-game date and time",
+    "objectManager - Game object loading and management",
+    "profiler - Performance profiling tools"
+  ]
+}
